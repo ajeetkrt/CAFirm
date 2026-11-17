@@ -448,6 +448,14 @@ gunicorn, non-root user, `HEALTHCHECK` on `/health`), `deploy/start.sh`
 (migrate → seed → serve on every boot) and `render.yaml` (Render Blueprint with
 generated secrets).
 
+### One-click deploy
+
+[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/ajeetkrt/CAFirm)
+
+Create the Neon database first (step 1 below), then click the button —
+Render signs in with GitHub, reads `render.yaml`, and asks you for only one
+thing: the Neon `DATABASE_URL`.
+
 ### Steps
 
 1. **Neon** — sign up at [neon.tech](https://neon.tech), create a project, copy

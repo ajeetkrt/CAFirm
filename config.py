@@ -27,6 +27,15 @@ def _env_bool(name: str, default: str = "False") -> bool:
     return os.getenv(name, default).strip().lower() in ("1", "true", "yes", "on")
 
 
+def _db_url(raw: str) -> str:
+    """Render/Neon hand out postgres:// or postgresql:// URLs; this app uses psycopg3."""
+    url = (raw or "").strip()
+    for prefix in ("postgres://", "postgresql://"):
+        if url.startswith(prefix):
+            return "postgresql+psycopg://" + url[len(prefix):]
+    return url
+
+
 class Config:
     """Base configuration shared by every environment."""
 
@@ -43,10 +52,10 @@ class Config:
     WTF_CSRF_TIME_LIMIT = 12 * 60 * 60
 
     # Database — real credentials come from .env (see .env.example)
-    SQLALCHEMY_DATABASE_URI = os.getenv(
+    SQLALCHEMY_DATABASE_URI = _db_url(os.getenv(
         "DATABASE_URL",
         "postgresql+psycopg://postgres:YOUR_PASSWORD@localhost:5432/cafarm_db",
-    )
+    ))
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     SQLALCHEMY_ENGINE_OPTIONS = {"pool_pre_ping": True, "pool_recycle": 1800}
 

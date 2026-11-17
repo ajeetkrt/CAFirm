@@ -30,11 +30,11 @@ def create_app(config_class_name: str | None = None) -> Flask:
     config_class = get_config(config_class_name)
     app.config.from_object(config_class)
 
-    _configure_logging(app)
-
-    # Ensure runtime folders exist.
+    # Ensure runtime folders exist (must happen before file logging starts).
     app.config["UPLOAD_FOLDER"].mkdir(parents=True, exist_ok=True)
     app.config["LOG_FOLDER"].mkdir(parents=True, exist_ok=True)
+
+    _configure_logging(app)
 
     # Extensions
     db.init_app(app)

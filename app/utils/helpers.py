@@ -1,4 +1,5 @@
 """Reusable helper utilities: logging of activities, IP extraction and rate limiting."""
+import sys
 import threading
 from collections import defaultdict, deque
 from datetime import datetime, timezone
@@ -21,17 +22,17 @@ STATUS_BADGE_CLASSES = {
 
 
 def get_client_ip() -> str:
-    """Best-effort client IP; falls back to the remote address.
+    """Best-effort client IP; honours X-Forwarded-For (reverse proxy).
 
-    Safe to call outside a request context (returns 0.0.0.0).
+    Safe to call outside a request context (returns "unknown").
     """
     try:
         forwarded = request.headers.get("X-Forwarded-For", "")
         if forwarded:
             return forwarded.split(",")[0].strip()
-        return request.remote_addr or "0.0.0.0"
+        return request.remote_addr or "unknown"
     except RuntimeError:  # no request context (CLI, tests, background work)
-        return "0.0.0.0"
+        return "unknown"
 
 
 def log_activity(action, description="", user=None, enquiry=None, ip_address=None, commit=True):
@@ -59,8 +60,8 @@ def log_activity(action, description="", user=None, enquiry=None, ip_address=Non
     except Exception as exc:  # noqa: BLE001 — audit failures must never break the request
         try:
             current_app.logger.warning("Activity log failed for action %s: %s", action, exc)
-        except Exception:  # noqa: BLE001
-            pass
+        except Exception:  # noqa: BLE001 — even the logger may be unavailable
+            print(f"Activity log failed for action {action}: {exc}", file=sys.stderr)
 
 
 class RateLimiter:

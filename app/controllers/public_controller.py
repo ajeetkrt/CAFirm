@@ -28,6 +28,12 @@ LATEST_NOTES = [
 ]
 
 
+@public_bp.route("/health")
+def health():
+    """Liveness probe for hosting platforms — no data, no session, no DB call."""
+    return {"status": "ok", "app": current_app.config["APP_NAME"]}
+
+
 @public_bp.route("/")
 def index():
     """Public landing page — live statistics and quick actions via procedures."""

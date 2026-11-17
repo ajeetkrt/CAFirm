@@ -99,6 +99,30 @@ def create_app(config_class_name: str | None = None) -> Flask:
             "today_long": datetime.now().strftime("%A, %d %B %Y"),
         }
 
+    # Security headers on every response (audit hardening).
+    @app.after_request
+    def set_security_headers(response):
+        response.headers.setdefault("X-Content-Type-Options", "nosniff")
+        response.headers.setdefault("X-Frame-Options", "DENY")
+        response.headers.setdefault("Referrer-Policy", "strict-origin-when-cross-origin")
+        response.headers.setdefault(
+            "Permissions-Policy", "camera=(), microphone=(), geolocation=()"
+        )
+        # Conservative CSP: inline styles/scripts stay allowed because the
+        # templates use small inline <script> blocks and style attributes;
+        # everything else is same-origin only (all libraries are vendored).
+        response.headers.setdefault(
+            "Content-Security-Policy",
+            "default-src 'self'; img-src 'self' data:; "
+            "style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline'; "
+            "object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'",
+        )
+        if not app.testing and not app.debug:
+            response.headers.setdefault(
+                "Strict-Transport-Security", "max-age=31536000; includeSubDomains"
+            )
+        return response
+
     # Error pages
     @app.errorhandler(403)
     def forbidden(_error):
@@ -171,10 +195,18 @@ def _register_seed_command(app: Flask) -> None:
         admin_role = session.query(Role).filter_by(role_name="Admin").first()
         user_role = session.query(Role).filter_by(role_name="User").first()
 
+        # Seed passwords: defaults suit local development; on a deployed
+        # instance set SEED_ADMIN_PASSWORD / SEED_STAFF_PASSWORD in the
+        # environment so no guessable password ever exists.
+        import os
+
+        admin_password = os.getenv("SEED_ADMIN_PASSWORD", "Admin@123")
+        staff_password = os.getenv("SEED_STAFF_PASSWORD", "User@123")
+
         accounts = [
-            ("admin", "Administrator", "admin@cafirm.local", "Admin@123", admin_role),
-            ("user1", "User One", "user1@cafirm.local", "User@123", user_role),
-            ("user2", "User Two", "user2@cafirm.local", "User@123", user_role),
+            ("admin", "Administrator", "admin@cafirm.local", admin_password, admin_role),
+            ("user1", "User One", "user1@cafirm.local", staff_password, user_role),
+            ("user2", "User Two", "user2@cafirm.local", staff_password, user_role),
         ]
         for username, full_name, email, password, role in accounts:
             user = session.query(User).filter_by(username=username).first()
@@ -205,4 +237,7 @@ def _register_seed_command(app: Flask) -> None:
 
         session.commit()
         click.echo("Seed completed: roles, internal accounts and default categories are ready.")
-        click.echo("Default logins -> admin/Admin@123, user1/User@123, user2/User@123 (change them in production).")
+        if os.getenv("SEED_ADMIN_PASSWORD") or os.getenv("SEED_STAFF_PASSWORD"):
+            click.echo("Logins -> admin / user1 / user2 (passwords taken from SEED_* environment variables).")
+        else:
+            click.echo("Default logins -> admin/Admin@123, user1/User@123, user2/User@123 (change them in production).")

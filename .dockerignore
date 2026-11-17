@@ -1,0 +1,20 @@
+# Never bake local machine state or secrets into the image
+.git
+.gitignore
+.env
+.venv
+venv
+__pycache__/
+*.py[cod]
+.pytest_cache/
+instance/
+logs/
+uploads/*
+!uploads/.gitkeep
+wheelhouse/
+tests/
+Dockerfile
+.dockerignore
+deploy/_*.ps1
+_commit_msg.txt
+hy.txt

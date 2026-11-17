@@ -429,3 +429,87 @@ CSRF token. The API is additionally protected by rate limiting and role guards
   route-accurate on both roles.
 - **Suite at 146 passing tests** (was 60) — covering the new permission rules,
   the manage panel, dashboards, popup flows and the REST API.
+
+---
+
+## 13. Free hosting deployment (Render + Neon)
+
+The app is procedure-driven — every feature calls a PL/pgSQL `usp_*` function —
+so hosting needs a **real PostgreSQL** database, not a proxy like Supabase's
+PgBouncer-only free tier. The free stack that supports it end-to-end:
+
+| Piece       | Service                          | Free tier                                                                 |
+|-------------|----------------------------------|---------------------------------------------------------------------------|
+| Web app     | **Render** — Docker web service  | 750 h/month, sleeps after ~15 min idle (~50 s cold start on next request) |
+| Database    | **Neon** — serverless PostgreSQL | Always free (no expiry), supports stored procedures, `sslmode=require`    |
+
+Deployment artifacts committed to the repo: `Dockerfile` (python:3.14-slim,
+gunicorn, non-root user, `HEALTHCHECK` on `/health`), `deploy/start.sh`
+(migrate → seed → serve on every boot) and `render.yaml` (Render Blueprint with
+generated secrets).
+
+### Steps
+
+1. **Neon** — sign up at [neon.tech](https://neon.tech), create a project, copy
+   the connection string and adapt it for SQLAlchemy by adding the `+psycopg`
+   driver segment:
+   `postgresql+psycopg://USER:PASSWORD@ep-xxxx.region.aws.neon.tech/neondb?sslmode=require`
+2. **Render** — sign in at [render.com](https://render.com), **New → Blueprint**,
+   connect the `ajeetkrt/CAFirm` repo; Render reads `render.yaml` and, because
+   `DATABASE_URL` is `sync: false`, prompts you to paste the Neon string.
+3. Deploy — on boot the container runs `db upgrade` (schema + all `usp_*`
+   procedures), `seed` (roles, accounts, default categories), then serves the
+   app with gunicorn on `$PORT`.
+4. Open **Render dashboard → cafirm → Environment** and copy the generated
+   `SEED_ADMIN_PASSWORD` / `SEED_STAFF_PASSWORD` values — on the live instance
+   the seed logins are `admin` / `user1` / `user2` with those random passwords
+   (the well-known `Admin@123`-style defaults never exist there).
+
+Free-tier caveats: the service sleeps when idle and takes ~50 s to wake;
+**uploads are ephemeral** — files stored in `uploads/` disappear on restart or
+redeploy (attach a paid disk or switch to object storage for persistence).
+
+### Docker (any other host)
+
+```bash
+docker build -t cafirm .
+docker run -p 5000:5000 \
+  -e DATABASE_URL="postgresql+psycopg://user:pass@host:5432/cafirm_db" \
+  -e SECRET_KEY="$(openssl rand -hex 32)" \
+  -e SEED_ADMIN_PASSWORD="$(openssl rand -hex 12)" \
+  -e SEED_STAFF_PASSWORD="$(openssl rand -hex 12)" \
+  cafirm
+```
+
+---
+
+## 14. Security audit
+
+Automated scans run with the tool versions pinned at audit time
+(**bandit 1.9.4**, **pip-audit** with OSV/pyup.io databases):
+
+| Check | Scope | Result |
+|-------|-------|--------|
+| `bandit -r app config.py run.py` | all application code | **0 findings** (0 low / 0 medium / 0 high) |
+| `pip-audit -r requirements.txt` | every dependency pin | **No known vulnerabilities found** |
+| pytest suite | 146 tests incl. auth, IDOR scoping, role guards, CSRF-exempt API | **146 passed** |
+
+Hardening applied for the public deployment:
+
+- **No secrets in the repo** — `config.py` reads everything from `.env`
+  (gitignored); `.env.example` ships placeholders only. The Docker image
+  excludes `.env`, `uploads/`, `logs/`, `instance/` via `.dockerignore`.
+- **No default credentials in production** — seed passwords come from
+  `SEED_ADMIN_PASSWORD` / `SEED_STAFF_PASSWORD` environment variables; Render
+  generates random values (`generateValue: true`).
+- **Security headers on every response** — `X-Content-Type-Options: nosniff`,
+  `X-Frame-Options: DENY` (+ `frame-ancestors 'none'`), `Referrer-Policy`,
+  `Permissions-Policy`, a same-origin Content-Security-Policy
+  (`default-src 'self'`, all libraries vendored — no CDN), and
+  `Strict-Transport-Security` in production.
+- **Container runs as non-root** (`appuser`), single-process entrypoint
+  supervised by gunicorn with a bounded thread pool.
+- **Existing protections** (unchanged): Werkzeug password hashing, CSRF tokens
+  on all web forms, honeypot + rate limiting on public endpoints, server-side
+  ownership scoping against IDOR, opaque attachment filenames with extension
+  and size validation, and hashed visitor tracking tokens (shown once).

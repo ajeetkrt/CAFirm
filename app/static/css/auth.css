@@ -1,0 +1,284 @@
+/* ==========================================================================
+   CAFirm — auth stylesheet (auth.css)
+   Split-screen staff login: brand panel + form panel. The shell fills the
+   fixed app frame exactly, so the page never scrolls on normal desktops.
+   ========================================================================== */
+
+/* The viewport block is a flex column: flash messages share its height
+   instead of pushing the shell below the fold. */
+main.app-main > .login-viewport {
+  height: 100%;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  max-width: none;
+  position: relative; /* anchors the floating flash overlay */
+}
+
+/* Immersive entrance — the footer is hidden on the login page */
+body.login-page > .app-footer { display: none; }
+
+/* Logout / error flashes must not consume flow height — they float over the
+   top of the form panel so the page NEVER scrolls, even right after logout. */
+main.app-main > .login-viewport > .flash-area {
+  position: absolute;
+  top: .7rem;
+  left: 75%; /* centred over the form panel (right half) */
+  transform: translateX(-50%);
+  width: min(460px, 42vw);
+  margin: 0;
+  z-index: 30;
+}
+
+.login-shell {
+  flex: 1 1 0;
+  min-height: 0;
+  display: flex;
+  width: 100%;
+}
+
+/* --- Left brand panel ------------------------------------------------------ */
+.login-brand-panel {
+  flex: 1.05 1 0;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden; /* decorative panel — clips instead of scrolling on ultra-short windows */
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: clamp(1.4rem, 4vh, 2.6rem) clamp(1.4rem, 3.5vw, 3rem);
+  background:
+    radial-gradient(120% 90% at 100% 0%, rgba(249, 168, 37, .12) 0%, transparent 55%),
+    linear-gradient(150deg, var(--ca-green-900) 0%, var(--ca-green-800) 58%, #2c6e33 100%);
+  color: #fff;
+  border-right: 3px solid var(--ca-amber);
+  box-shadow: inset 0 0 60px rgba(0, 0, 0, .18);
+}
+
+.login-brand-top { text-align: center; }
+
+.login-brand-mark {
+  background: #fff;
+  color: var(--ca-green-800);
+  width: 68px;
+  height: 68px;
+  font-size: 1.65rem;
+  border-radius: 16px;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, .30);
+}
+
+.login-brand-title {
+  margin: .85rem 0 .15rem;
+  font-size: clamp(1.35rem, 3.1vh, 1.85rem);
+  font-weight: 700;
+  letter-spacing: .3px;
+}
+
+.login-brand-sub {
+  margin: 0;
+  font-size: clamp(.8rem, 1.5vh, .95rem);
+  color: #cfe6d4;
+  font-weight: 600;
+  line-height: 1.35;
+}
+
+.login-brand-rule {
+  display: block;
+  width: 54px;
+  height: 3px;
+  margin: .8rem auto 0;
+  border-radius: 999px;
+  background: var(--ca-amber);
+}
+
+/* CA hero illustration — sits between the brand heading and feature rows */
+.login-hero {
+  flex: 0 1 auto;
+  min-height: 0;
+  width: min(100%, 350px);
+  margin: 0 auto;
+}
+.login-hero img {
+  display: block;
+  width: 100%;
+  height: auto;
+  user-select: none;
+  filter: drop-shadow(0 10px 16px rgba(3, 26, 12, .30));
+}
+
+/* Feature rows */
+.login-brand-features {
+  display: flex;
+  flex-direction: column;
+  gap: .7rem;
+  max-width: 410px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+.login-feature {
+  display: flex;
+  align-items: flex-start;
+  gap: .65rem;
+  background: rgba(255, 255, 255, .08);
+  border: 1px solid rgba(255, 255, 255, .16);
+  border-radius: 12px;
+  padding: .65rem .8rem;
+  backdrop-filter: blur(2px);
+}
+
+.login-feature-icon {
+  flex: 0 0 auto;
+  width: 34px;
+  height: 34px;
+  display: grid;
+  place-items: center;
+  border-radius: 10px;
+  background: rgba(249, 168, 37, .16);
+  color: var(--ca-amber);
+  font-size: 1.05rem;
+}
+
+.login-feature-title { font-size: .92rem; font-weight: 700; line-height: 1.3; }
+.login-feature-text { font-size: .78rem; color: #cfe6d4; line-height: 1.4; }
+
+.login-brand-foot {
+  text-align: center;
+  font-size: .75rem;
+  color: #cfe6d4;
+  letter-spacing: .3px;
+}
+.login-brand-foot .bi { color: var(--ca-amber); }
+
+/* --- Right form panel ------------------------------------------------------ */
+.login-form-panel {
+  flex: 1 1 0;
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  /* extra top padding = headroom for the floating flash overlay */
+  padding: clamp(2.4rem, 6vh, 3.2rem) clamp(.9rem, 3vh, 2rem) clamp(.9rem, 3vh, 2rem);
+  background:
+    radial-gradient(100% 70% at 0% 100%, rgba(27, 94, 32, .05) 0%, transparent 60%),
+    var(--ca-green-050);
+  overflow: hidden; /* desktop NEVER scrolls — height tiers below compact the content */
+}
+
+.login-card {
+  width: 100%;
+  max-width: 380px;
+  margin: auto;
+  background: #fff;
+  border: 1px solid var(--ca-border);
+  border-top: 4px solid var(--ca-green-700);
+  border-radius: 14px;
+  box-shadow: 0 10px 28px rgba(20, 50, 28, .12);
+  padding: clamp(1.1rem, 3vh, 1.7rem) clamp(1.1rem, 2.6vw, 1.8rem);
+}
+
+.login-head { margin-bottom: 1.15rem; }
+
+.login-title {
+  font-size: clamp(1.05rem, 2.2vh, 1.3rem);
+  font-weight: 700;
+  color: var(--ca-green-900);
+  margin: 0 0 .15rem;
+}
+
+.login-sub { font-size: .74rem; color: var(--ca-text-muted); }
+
+.login-input .form-control {
+  border-left: none;
+  padding: .5rem .65rem;
+}
+.login-input .input-group-text {
+  background: var(--ca-green-050);
+  border-color: var(--ca-border);
+  color: var(--ca-green-800);
+}
+.login-input .form-control:focus {
+  border-color: var(--ca-green-600);
+  box-shadow: 0 0 0 .2rem rgba(46, 125, 50, .15);
+}
+
+.login-btn {
+  font-weight: 700;
+  letter-spacing: .3px;
+  border-radius: 10px;
+  transition: transform .15s ease, box-shadow .15s ease, background .15s ease;
+}
+.login-btn:hover,
+.login-btn:focus {
+  background: linear-gradient(135deg, #ffbe4d, var(--ca-amber));
+  transform: translateY(-1px);
+  box-shadow: 0 8px 22px rgba(249, 168, 37, .5);
+}
+.login-btn:active {
+  transform: translateY(0);
+  box-shadow: 0 4px 12px rgba(249, 168, 37, .4);
+}
+
+.login-divider {
+  display: flex;
+  align-items: center;
+  gap: .6rem;
+  color: var(--ca-text-muted);
+  font-size: .64rem;
+  text-transform: uppercase;
+  letter-spacing: .5px;
+  margin: .9rem 0 .55rem;
+}
+.login-divider::before,
+.login-divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--ca-border);
+}
+
+.login-note { font-size: .68rem; color: var(--ca-text-muted); line-height: 1.5; }
+.login-note .bi { color: var(--ca-green-700); }
+
+/* --- Small screens: brand panel hidden, card centred on soft green --------- */
+@media (max-width: 991.98px) {
+  main.app-main > .login-viewport { height: auto; min-height: 100%; }
+  main.app-main > .login-viewport > .flash-area { left: 50%; width: min(460px, 92%); }
+  .login-shell { min-height: 100%; }
+  .login-form-panel {
+    padding: 1.2rem .9rem;
+    overflow-y: auto; /* tiny screens may scroll internally as a last resort */
+  }
+}
+
+/* --- Height tiers — the page must fit without scrolling at ANY window height */
+@media (max-height: 760px) {
+  .login-brand-panel { padding: 1rem 1.8rem; gap: .55rem; }
+  .login-brand-foot { display: none; }
+  .login-hero { width: min(100%, 200px); }
+  .login-brand-features { gap: .4rem; }
+  .login-feature { padding: .45rem .6rem; gap: .55rem; }
+  .login-feature-icon { width: 30px; height: 30px; font-size: .92rem; }
+  .login-feature-title { font-size: .84rem; }
+  .login-feature-text { font-size: .7rem; }
+  .login-form-panel { padding: 1.7rem 1.2rem .8rem; }
+  .login-card { padding: .9rem 1.25rem; }
+  .login-head { margin-bottom: .65rem; }
+  .login-input .form-control { padding: .36rem .6rem; }
+  .login-btn { padding: .38rem 1rem !important; }
+  .login-divider { margin: .55rem 0 .3rem; }
+  .login-note { line-height: 1.4; }
+}
+
+@media (max-height: 600px) {
+  .login-hero { display: none; }           /* protect the never-scroll rule */
+  .login-feature-text { display: none; }   /* titles only */
+  .login-feature-title { font-size: .78rem; }
+  .brand-mark-lg.login-brand-mark { width: 44px; height: 44px; font-size: 1.15rem; border-radius: 11px; }
+  .login-brand-title { font-size: 1.1rem; margin-top: .5rem; }
+  .login-brand-rule { margin-top: .45rem; }
+  .login-title { font-size: 1rem; }
+  .login-sub { display: none; }
+  .login-card { max-width: 340px; }
+}

@@ -1,0 +1,31 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+
+# Virtual environment
+venv/
+.venv/
+
+# Environment
+.env
+
+# Database
+instance/
+
+# Runtime data
+logs/*
+!logs/.gitkeep
+uploads/*
+!uploads/.gitkeep
+
+# Wheelhouse (built separately for offline install)
+wheelhouse/
+
+# OS files
+Thumbs.db
+.DS_Store
+
+# Scratch
+hy.txt

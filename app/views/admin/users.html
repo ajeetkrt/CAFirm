@@ -1,0 +1,211 @@
+{% extends 'layouts/dashboard.html' %}
+{% block title %}Manage Users — {{ APP_NAME }}{% endblock %}
+{% block topbar_title %}Manage Users{% endblock %}
+
+{% block dashboard_content %}
+
+<!-- ==================== USER ADMINISTRATION BAND ==================== -->
+<section class="welcome-band">
+  <div class="welcome-left">
+    <h1 class="welcome-hello"><i class="bi bi-people me-1"></i> User Administration</h1>
+    <p class="welcome-date">
+      Accounts <span class="welcome-dot">·</span> Roles <span class="welcome-dot">·</span>
+      Access — every staff login in one place
+    </p>
+  </div>
+  <div class="welcome-right">
+    <div class="welcome-chips">
+      <span class="welcome-chip"><i class="bi bi-person-badge"></i> {{ counts.total }} users</span>
+      <span class="welcome-chip"><i class="bi bi-check2-circle"></i> {{ counts.active }} active</span>
+      <span class="welcome-chip"><i class="bi bi-shield-lock"></i> {{ counts.admins }} admins</span>
+      <span class="welcome-chip"><i class="bi bi-person"></i> {{ counts.employees }} employees</span>
+    </div>
+    <div class="d-flex justify-content-end mt-2">
+      <button type="button" class="btn btn-gold btn-sm px-3" data-bs-toggle="modal"
+              data-bs-target="#createUserModal">
+        <i class="bi bi-person-plus-fill"></i> New User
+      </button>
+    </div>
+  </div>
+</section>
+
+<!-- ==================== USERS TABLE ==================== -->
+<div class="card table-card">
+  <div class="table-responsive table-scroll">
+    <table class="table table-hover align-middle mb-0 users-table">
+      <thead>
+        <tr>
+          <th>User</th>
+          <th class="d-none d-md-table-cell">Email</th>
+          <th>Role</th>
+          <th>Status</th>
+          <th class="text-end pe-3">Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for user in users %}
+        <tr>
+          <td>
+            <div class="d-flex align-items-center gap-2">
+              <span class="user-avatar {{ 'inactive' if not user.is_active }}">{{ user.full_name[:1]|upper }}</span>
+              <div class="lh-sm">
+                <div class="fw-semibold table-user-name">{{ user.full_name }}</div>
+                <div class="table-username">@{{ user.username }}</div>
+              </div>
+            </div>
+          </td>
+          <td class="d-none d-md-table-cell small">{{ user.email }}</td>
+          <td><span class="badge role-badge">{{ user.role.role_name if user.role else '?' }}</span></td>
+          <td>
+            <span class="badge status-badge {{ 'status-resolved' if user.is_active else 'status-rejected' }}">
+              {{ 'Active' if user.is_active else 'Inactive' }}
+            </span>
+          </td>
+          <td class="text-end pe-3">
+            {% if user.user_id != current_user.user_id %}
+            <form method="post" class="d-inline form-confirm"
+                  action="{{ url_for('admin.toggle_user', user_id=user.user_id) }}"
+                  data-confirm="{{ 'Deactivate' if user.is_active else 'Activate' }} user '{{ user.username }}'?">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <input type="hidden" name="page" value="{{ pagination.page if pagination else 1 }}">
+              <button class="btn btn-sm btn-outline-{{ 'danger' if user.is_active else 'success' }} px-2"
+                      title="{{ 'Deactivate' if user.is_active else 'Activate' }} {{ user.username }}">
+                <i class="bi bi-{{ 'person-dash' if user.is_active else 'person-check' }}"></i>
+                {{ 'Deactivate' if user.is_active else 'Activate' }}
+              </button>
+            </form>
+            {% else %}
+            <span class="text-muted small">You</span>
+            {% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  {% if pagination %}
+  <div class="list-foot">
+    <span class="list-count">
+      Showing <strong>{{ pagination.start }}–{{ pagination.end }}</strong> of <strong>{{ pagination.total }}</strong>
+      · {{ counts.active }} active · {{ counts.total - counts.active }} inactive
+      {% if pagination.pages > 1 %}· Page {{ pagination.page }} of {{ pagination.pages }}{% endif %}
+    </span>
+
+    {% if pagination.pages > 1 %}
+    {% set pages = pagination.pages %}
+    {% set win_start = [([pagination.page - 2, 1] | max), ([pages - 4, 1] | max)] | min %}
+    {% set win_end = [win_start + 4, pages] | min %}
+    {% set win_start = [win_end - 4, 1] | max %}
+    <nav aria-label="User pages">
+      <ul class="pagination pagination-sm mb-0 pagination-ca">
+        <li class="page-item {% if pagination.page <= 1 %}disabled{% endif %}">
+          <a class="page-link" {% if pagination.page > 1 %}href="{{ url_for('admin.users', page=pagination.page - 1) }}"{% else %}href="#"{% endif %}>&laquo;</a>
+        </li>
+        {% if win_start > 1 %}
+        <li class="page-item"><a class="page-link" href="{{ url_for('admin.users', page=1) }}">1</a></li>
+        {% if win_start > 2 %}<li class="page-item disabled"><span class="page-link page-ellipsis">…</span></li>{% endif %}
+        {% endif %}
+        {% for p in range(win_start, win_end + 1) %}
+        <li class="page-item {{ 'active' if p == pagination.page }}">
+          <a class="page-link" href="{{ url_for('admin.users', page=p) }}">{{ p }}</a>
+        </li>
+        {% endfor %}
+        {% if win_end < pages %}
+        {% if win_end < pages - 1 %}<li class="page-item disabled"><span class="page-link page-ellipsis">…</span></li>{% endif %}
+        <li class="page-item"><a class="page-link" href="{{ url_for('admin.users', page=pages) }}">{{ pages }}</a></li>
+        {% endif %}
+        <li class="page-item {% if pagination.page >= pages %}disabled{% endif %}">
+          <a class="page-link" {% if pagination.page < pages %}href="{{ url_for('admin.users', page=pagination.page + 1) }}"{% else %}href="#"{% endif %}>&raquo;</a>
+        </li>
+      </ul>
+    </nav>
+    {% else %}
+    <span class="list-count"><i class="bi bi-shield-check"></i> Role and status changes are recorded in the audit trail</span>
+    {% endif %}
+  </div>
+  {% endif %}
+</div>
+
+<!-- ==================== CREATE USER (MODAL) ==================== -->
+<div class="modal fade" id="createUserModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header user-modal-header">
+        <h5 class="modal-title"><i class="bi bi-person-plus-fill me-1"></i> Create New User</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <form method="post" action="{{ url_for('admin.create_user') }}" novalidate>
+        <div class="modal-body">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+          {% if form_errors is defined and form_errors %}
+          <div class="alert alert-danger py-2 px-3 small mb-2">
+            <i class="bi bi-exclamation-triangle-fill me-1"></i>
+            <strong>Please fix the following:</strong>
+            {% for error in form_errors %}<div>{{ error }}</div>{% endfor %}
+          </div>
+          {% endif %}
+
+          <div class="row g-2">
+            <div class="col-7">
+              <label class="form-label small" for="username">Username</label>
+              <input class="form-control form-control-sm" id="username" name="username"
+                     maxlength="50" required autocomplete="off" placeholder="e.g. ravi.k"
+                     value="{{ form.username if form is defined and form else '' }}">
+            </div>
+            <div class="col-5">
+              <label class="form-label small" for="role_id">Role</label>
+              <select class="form-select form-select-sm" id="role_id" name="role_id" required>
+                {% for role in roles %}
+                <option value="{{ role.role_id }}"
+                  {% if form is defined and form and form.role_id|string == role.role_id|string %}selected{% endif %}>
+                  {{ role.role_name }}
+                </option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="col-12">
+              <label class="form-label small" for="full_name">Full Name</label>
+              <input class="form-control form-control-sm" id="full_name" name="full_name"
+                     maxlength="100" required placeholder="e.g. Ravi Kumar"
+                     value="{{ form.full_name if form is defined and form else '' }}">
+            </div>
+            <div class="col-12">
+              <label class="form-label small" for="email">Email</label>
+              <input class="form-control form-control-sm" type="email" id="email" name="email"
+                     maxlength="120" required autocomplete="off" placeholder="name@example.com"
+                     value="{{ form.email if form is defined and form else '' }}">
+            </div>
+            <div class="col-12">
+              <label class="form-label small" for="password">Password</label>
+              <input class="form-control form-control-sm" type="password" id="password" name="password"
+                     minlength="8" required autocomplete="new-password" placeholder="••••••••">
+              <div class="form-text">Min 8 characters with letters and numbers.</div>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer py-2">
+          <button type="button" class="btn btn-sm btn-outline-secondary px-3" data-bs-dismiss="modal">Cancel</button>
+          <button type="submit" class="btn btn-brand btn-sm px-3"><i class="bi bi-check2-circle"></i> Create User</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    /* Re-open the create-user modal when an error re-render brought us here,
+       so the administrator can fix the highlighted fields immediately. */
+    {% if form is defined and form %}
+    var modal = document.getElementById("createUserModal");
+    if (modal && window.bootstrap) {
+      bootstrap.Modal.getOrCreateInstance(modal).show();
+    }
+    {% endif %}
+  });
+</script>
+{% endblock %}

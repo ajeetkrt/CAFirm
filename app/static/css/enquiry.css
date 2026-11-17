@@ -1,0 +1,312 @@
+/* ==========================================================================
+   CAFirm — enquiry stylesheet (enquiry.css)
+   Enquiry forms, tracking timeline, reference box.
+   ========================================================================== */
+
+/* --- Enquiry form: fills the available space, never scrolls ----------------
+   .form-fit makes the card center itself in the space between the shell
+   header and footer; all sizes use viewport-height clamps so the card
+   always fits. Used by the public page AND the staff New Enquiry page. */
+.form-fit {
+  min-height: 100%;
+  display: flex;
+}
+/* Inside the dashboard shell the fit box fills the space under the topbar. */
+.page-body > .form-fit {
+  min-height: calc(100vh - 7.5rem);
+}
+.form-fit > .row {
+  width: 100%;
+  max-width: 1240px;
+  margin: auto;   /* safe two-axis centering */
+}
+
+.form-fit .form-card { border-radius: 14px; }
+
+.form-fit .form-card-header {
+  background: linear-gradient(135deg, var(--ca-green-900) 0%, var(--ca-green-800) 100%);
+  color: #fff;
+  border-bottom: 3px solid var(--ca-amber);
+}
+.form-fit .form-card-header .h5 {
+  font-size: clamp(1rem, 2vh, 1.15rem);
+  color: #fff;
+}
+.form-fit .form-card-header .small { color: #cfe6d4; }
+
+.form-fit .card-body {
+  padding: clamp(.5rem, 1.3vh, 1.15rem) clamp(.8rem, 1.4vw, 1.4rem);
+}
+
+.form-fit .form-label {
+  font-size: clamp(.68rem, 1.2vh, .78rem);
+  font-weight: 600;
+  margin-bottom: .25rem;
+}
+
+.form-fit .form-control,
+.form-fit .form-select {
+  border-radius: 8px;
+  font-size: clamp(.78rem, 1.4vh, .88rem);
+  padding: .32rem .6rem;
+}
+.form-fit .form-control:focus,
+.form-fit .form-select:focus {
+  border-color: var(--ca-green-600);
+  box-shadow: 0 0 0 .18rem rgba(46, 125, 50, 0.14);
+}
+
+.form-fit #description {
+  height: clamp(78px, 15vh, 148px);
+  min-height: 64px;
+  resize: vertical;
+}
+
+.form-fit .form-text {
+  font-size: clamp(.62rem, 1.05vh, .7rem);
+}
+
+.form-fit .form-actions {
+  margin-top: clamp(.5rem, 1.2vh, 1rem) !important;
+}
+
+/* Required-field marker (gold) */
+.req { color: var(--ca-amber); font-weight: 700; }
+
+/* Gold submit button — matches the home page CTA */
+.btn-gold {
+  background: var(--ca-amber);
+  border: none;
+  color: var(--ca-green-900);
+  font-weight: 700;
+  box-shadow: 0 4px 12px rgba(249, 168, 37, 0.35);
+}
+.btn-gold:hover,
+.btn-gold:focus {
+  background: #ffbe4d;
+  color: var(--ca-green-900);
+}
+
+/* --- Track result — impressive status panel -------------------------------- */
+.track-result {
+  background: var(--ca-green-050);
+  border: 1px solid var(--ca-border);
+  border-radius: 10px;
+  padding: clamp(.5rem, 1.2vh, .9rem) clamp(.6rem, 1.3vw, 1rem);
+}
+
+.status-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: .5rem;
+}
+
+.enquiry-code {
+  font-family: ui-monospace, "Cascadia Mono", Consolas, monospace;
+  font-size: clamp(.85rem, 1.8vh, 1.05rem);
+  font-weight: 700;
+  letter-spacing: .5px;
+  color: var(--ca-green-900);
+  background: #fff;
+  border: 1px solid var(--ca-border);
+  border-radius: 8px;
+  padding: .28em .7em;
+  user-select: all;
+}
+.enquiry-code-sm { font-size: clamp(.74rem, 1.4vh, .84rem); padding: .2em .5em; }
+
+/* Journey strip: Received → In Progress → Resolved */
+.progress-steps {
+  display: flex;
+  align-items: center;
+  gap: .3rem;
+  margin: .7rem 0 .4rem;
+}
+.progress-step {
+  flex: 1;
+  text-align: center;
+  font-size: clamp(.58rem, 1.05vh, .7rem);
+  font-weight: 700;
+  letter-spacing: .05em;
+  text-transform: uppercase;
+  color: var(--ca-text-muted);
+}
+.progress-step::before {
+  content: '';
+  display: block;
+  height: 6px;
+  border-radius: 999px;
+  background: var(--ca-border);
+  margin-bottom: .3rem;
+}
+.progress-step.done { color: var(--ca-green-700); }
+.progress-step.done::before { background: var(--ca-green-600); }
+.progress-step.current { color: var(--ca-green-900); }
+.progress-step.current::before { background: var(--ca-amber); }
+
+/* Key facts grid */
+.track-details {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: .45rem;
+  margin: .5rem 0 .75rem;
+}
+.track-detail {
+  background: #fff;
+  border: 1px solid var(--ca-border);
+  border-radius: 8px;
+  padding: .35rem .55rem;
+}
+.track-detail .k {
+  font-size: clamp(.56rem, 1vh, .64rem);
+  font-weight: 700;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  color: var(--ca-text-muted);
+}
+.track-detail .v {
+  font-size: clamp(.74rem, 1.35vh, .84rem);
+  font-weight: 600;
+  color: var(--ca-text);
+  word-break: break-word;
+}
+
+/* Assigned officer strip — the person currently handling the enquiry */
+.assigned-strip {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: .6rem;
+  background: #fff;
+  border: 1px solid var(--ca-border);
+  border-left: 3px solid var(--ca-amber);
+  border-radius: 9px;
+  padding: .4rem .65rem;
+  margin-bottom: .55rem;
+  box-shadow: var(--ca-shadow);
+}
+.assigned-avatar {
+  width: clamp(30px, 5.4vh, 42px);
+  height: clamp(30px, 5.4vh, 42px);
+  flex: 0 0 auto;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  color: #fff;
+  font-size: clamp(.85rem, 1.7vh, 1.1rem);
+  background: linear-gradient(135deg, var(--ca-green-700), var(--ca-green-900));
+  box-shadow: 0 2px 8px rgba(27, 94, 32, 0.25);
+}
+.assigned-avatar-empty {
+  background: linear-gradient(135deg, #bdbdbd, #8d8d8d);
+  box-shadow: none;
+}
+.assigned-info { flex: 1 1 auto; min-width: 0; }
+.assigned-role {
+  font-size: clamp(.55rem, 1vh, .64rem);
+  font-weight: 700;
+  letter-spacing: .07em;
+  text-transform: uppercase;
+  color: var(--ca-text-muted);
+}
+.assigned-name {
+  font-size: clamp(.8rem, 1.5vh, .92rem);
+  font-weight: 700;
+  color: var(--ca-green-900);
+  line-height: 1.25;
+}
+.assigned-contact {
+  flex: 0 1 auto;
+  max-width: 100%;
+  font-size: clamp(.68rem, 1.25vh, .78rem);
+}
+.assigned-contact a {
+  color: var(--ca-green-800);
+  font-weight: 600;
+  text-decoration: none;
+  word-break: break-all;
+}
+.assigned-contact a:hover { color: var(--ca-green-600); text-decoration: underline; }
+.assigned-contact .bi-envelope-fill { color: var(--ca-amber); }
+
+/* Mobile lookup result cards */
+.mobile-item {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: .5rem;
+  background: #fff;
+  border: 1px solid var(--ca-border);
+  border-radius: 9px;
+  box-shadow: var(--ca-shadow);
+  padding: .45rem .6rem;
+}
+.mobile-item + .mobile-item { margin-top: .4rem; }
+
+/* --- Honeypot ------------------------------------------------------------- */
+.hp-field {
+  position: absolute !important;
+  left: -9999px !important;
+  top: auto !important;
+  height: 1px;
+  width: 1px;
+  overflow: hidden;
+}
+
+/* --- Reference box (visitor confirmation) --------------------------------- */
+.ref-box {
+  max-width: 460px;
+  border: 1px dashed var(--ca-green-700);
+  background: var(--ca-green-050);
+  border-radius: 10px;
+  padding: 1rem 1.25rem;
+  margin-top: 1.25rem;
+}
+.enquiry-number { font-size: 1.05rem; letter-spacing: .5px; }
+
+/* --- Timeline -------------------------------------------------------------- */
+.timeline {
+  list-style: none;
+  margin: 0;
+  padding: 0 0 0 .35rem;
+}
+.timeline-item {
+  position: relative;
+  padding: 0 0 1.1rem 1.35rem;
+  border-left: 2px solid var(--ca-border);
+}
+.timeline-item:last-child { border-left-color: transparent; padding-bottom: .25rem; }
+.timeline-badge {
+  position: absolute;
+  left: -7px;
+  top: .2rem;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  border: 2px solid #fff;
+  box-shadow: 0 0 0 1px var(--ca-border);
+}
+.timeline-badge.status-new        { background: #b3e5fc; }
+.timeline-badge.status-pending    { background: #f9d976; }
+.timeline-badge.status-assigned   { background: #ce93d8; }
+.timeline-badge.status-inprogress { background: #aed581; }
+.timeline-badge.status-resolved   { background: #66bb6a; }
+.timeline-badge.status-closed     { background: #90a4ae; }
+.timeline-badge.status-rejected   { background: #e57373; }
+.timeline-badge.status-reopened   { background: #ffb74d; }
+
+/* --- Track result ----------------------------------------------------------- */
+.track-result { text-align: left; }
+
+/* --- Action cards ------------------------------------------------------------ */
+.action-card .card-header {
+  background: var(--ca-green-050);
+  border-bottom: 1px solid var(--ca-border);
+  color: var(--ca-green-900);
+}
+
+/* --- Report table -------------------------------------------------------------- */
+.report-table { max-height: 65vh; overflow: auto; }

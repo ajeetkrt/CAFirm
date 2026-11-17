@@ -1,0 +1,357 @@
+{#- ==========================================================================
+   Enquiry popup fragment — injected into #enquiryModal on the dashboard by
+   static/js/enquiry-popup.js. Self-contained: no layout, no css/js blocks.
+
+   Views (querystring `view=`):
+     details — full details + current status + role-aware footer actions
+     status  — role-aware Update Status form (AJAX POST, errors stay in popup)
+     edit    — Edit Details form (AJAX POST, errors keep the typed values)
+   ========================================================================== -#}
+{% import 'enquiries/_doc_macros.html' as doc %}
+<div class="modal-content enquiry-popup" data-enquiry-id="{{ enquiry.enquiry_id }}">
+  <div class="modal-header user-modal-header py-2">
+    <h5 class="modal-title">
+      {%- if view == 'status' -%}
+        <i class="bi bi-arrow-repeat me-1"></i> Update Status · {{ enquiry.enquiry_number }}
+      {%- elif view == 'manage' -%}
+        <i class="bi bi-sliders me-1"></i> Manage Enquiry · {{ enquiry.enquiry_number }}
+      {%- elif view == 'edit' -%}
+        <i class="bi bi-pencil-square me-1"></i> Edit Enquiry Details · {{ enquiry.enquiry_number }}
+      {%- else -%}
+        <i class="bi bi-journal-text me-1"></i> Enquiry Details · {{ enquiry.enquiry_number }}
+      {%- endif -%}
+    </h5>
+    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+  </div>
+
+  {#- ------------------------------ STATUS VIEW ---------------------------- -#}
+  {% if view == 'status' %}
+  <form data-popup-form method="post" novalidate
+        action="{{ url_for('enquiry.change_status', enquiry_id=enquiry.enquiry_id) }}">
+    <div class="modal-body">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      {% if with_edit %}<input type="hidden" name="popup_edit" value="1">{% endif %}
+
+      {% if form_errors is defined and form_errors %}
+      <div class="alert alert-danger py-2 px-3 small mb-2">
+        <i class="bi bi-exclamation-triangle-fill me-1"></i>
+        {% for error in form_errors %}<div>{{ error }}</div>{% endfor %}
+      </div>
+      {% endif %}
+
+      <div class="small text-muted mb-2">
+        Current status:
+        <span class="badge status-badge {{ STATUS_BADGE_CLASSES.get(enquiry.status, 'status-new') }}">{{ enquiry.status }}</span>
+      </div>
+      <label class="form-label small" for="popup_status_select">New Status</label>
+      <select class="form-select form-select-sm mb-2" id="popup_status_select" name="status" required>
+        <option value="">— Select new status —</option>
+        {% for status in allowed_new_statuses %}
+        <option value="{{ status }}"
+          {% if form is defined and form and form.get('status') == status %}selected{% endif %}>{{ status }}</option>
+        {% endfor %}
+      </select>
+      <label class="form-label small" for="popup_status_remarks">Remarks</label>
+      <textarea class="form-control form-control-sm" id="popup_status_remarks" name="status_remarks" rows="2"
+                placeholder="Remarks (required when reopening)">{{ form.get('status_remarks', '') if form is defined and form else '' }}</textarea>
+      <div class="form-text">A short note is enough — reopening always requires a reason.</div>
+    </div>
+    <div class="modal-footer py-2">
+      <button type="button" class="btn btn-sm btn-outline-secondary px-3" data-popup-view="details">
+        <i class="bi bi-arrow-left"></i> Back
+      </button>
+      <button type="submit" class="btn btn-brand btn-sm px-3">
+        <i class="bi bi-check2-circle"></i> Apply Status Change
+      </button>
+    </div>
+  </form>
+
+  {#- ------------------------------ MANAGE VIEW --------------------------- -#}
+  {% elif view == 'manage' %}
+  <form data-popup-form method="post" novalidate
+        action="{{ url_for('enquiry.manage_enquiry', enquiry_id=enquiry.enquiry_id) }}">
+    <div class="modal-body manage-body">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      {% if with_edit %}<input type="hidden" name="popup_edit" value="1">{% endif %}
+
+      {% if form_errors is defined and form_errors %}
+      <div class="alert alert-danger py-2 px-3 small mb-2">
+        <i class="bi bi-exclamation-triangle-fill me-1"></i>
+        {% for error in form_errors %}<div>{{ error }}</div>{% endfor %}
+      </div>
+      {% endif %}
+
+      <!-- Where the enquiry stands right now -->
+      <div class="manage-strip">
+        <div class="manage-cell">
+          <span class="manage-k"><i class="bi bi-flag me-1"></i>Status</span>
+          <span class="badge status-badge {{ STATUS_BADGE_CLASSES.get(enquiry.status, 'status-new') }}">{{ enquiry.status }}</span>
+        </div>
+        <div class="manage-cell">
+          <span class="manage-k"><i class="bi bi-person-check me-1"></i>Assigned to</span>
+          <strong class="manage-v">{{ enquiry.assigned_to.full_name if enquiry.assigned_to else 'Unassigned' }}</strong>
+        </div>
+      </div>
+
+      <div class="row g-2 mt-1">
+        <div class="col-md-6">
+          <label class="manage-label" for="manage_assignee"><i class="bi bi-person-plus me-1"></i>Assign to</label>
+          <select class="form-select form-select-sm" id="manage_assignee" name="assigned_to_user_id">
+            <option value="">— Keep current assignee —</option>
+            {% for employee in employees %}
+            <option value="{{ employee.user_id }}"
+              {% if form is defined and form and form.get('assigned_to_user_id') == employee.user_id|string %}selected
+              {% elif form is not defined or not form and enquiry.assigned_to_user_id == employee.user_id %}selected{% endif %}>
+              {{ employee.full_name }} ({{ employee.username }})
+            </option>
+            {% endfor %}
+          </select>
+          <div class="manage-hint">Handing over moves the enquiry into “Assigned”.</div>
+        </div>
+        <div class="col-md-6">
+          <label class="manage-label" for="manage_status"><i class="bi bi-arrow-repeat me-1"></i>New status</label>
+          <select class="form-select form-select-sm" id="manage_status" name="status">
+            <option value="">— Keep current status —</option>
+            {% for status in allowed_new_statuses %}
+            <option value="{{ status }}"
+              {% if form is defined and form and form.get('status') == status %}selected{% endif %}>{{ status }}</option>
+            {% endfor %}
+          </select>
+          <div class="manage-hint">Closed, Rejected and Reopened are Admin decisions.</div>
+        </div>
+      </div>
+
+      <!-- The one and only remarks box for this panel -->
+      <label class="manage-label mt-1" for="manage_remarks"><i class="bi bi-chat-left-text me-1"></i>Remarks</label>
+      <textarea class="form-control form-control-sm" id="manage_remarks" name="manage_remarks" rows="3"
+                placeholder="One remark is enough — it travels with the assignment and the status change.">{{
+                form.get('manage_remarks', '') if form is defined and form else '' }}</textarea>
+      <div class="manage-hint">Applied with whichever action you choose; a lone remark is stored on its own.</div>
+    </div>
+    <div class="modal-footer py-2">
+      <button type="button" class="btn btn-sm btn-outline-secondary px-3" data-popup-view="details">
+        <i class="bi bi-arrow-left"></i> Back
+      </button>
+      <button type="submit" class="btn btn-gold btn-sm px-3">
+        <i class="bi bi-check2-circle"></i> Apply Changes
+      </button>
+    </div>
+  </form>
+
+  {#- ------------------------------- EDIT VIEW ----------------------------- -#}
+  {% elif view == 'edit' %}
+  <form data-popup-form method="post" enctype="multipart/form-data" novalidate
+        action="{{ url_for('enquiry.edit', enquiry_id=enquiry.enquiry_id) }}">
+    <div class="modal-body">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      {% if with_edit %}<input type="hidden" name="popup_edit" value="1">{% endif %}
+
+      {% if form_errors is defined and form_errors %}
+      <div class="alert alert-danger py-2 px-3 small mb-2">
+        <i class="bi bi-exclamation-triangle-fill me-1"></i>
+        <strong>Please fix the following:</strong>
+        {% for error in form_errors %}<div>{{ error }}</div>{% endfor %}
+      </div>
+      {% endif %}
+
+      <div class="row g-2">
+        <div class="col-md-6">
+          <label class="form-label small" for="popup_full_name">Full Name</label>
+          <input class="form-control form-control-sm" id="popup_full_name" name="full_name" maxlength="100" required
+                 value="{{ form.full_name if form is defined and form else enquiry.full_name }}">
+        </div>
+        <div class="col-md-6">
+          <label class="form-label small" for="popup_mobile">Mobile Number</label>
+          <input class="form-control form-control-sm" id="popup_mobile" name="mobile_number" maxlength="16" required
+                 value="{{ form.mobile_number if form is defined and form else enquiry.mobile_number }}">
+        </div>
+        <div class="col-md-6">
+          <label class="form-label small" for="popup_email">Email</label>
+          <input class="form-control form-control-sm" id="popup_email" name="email" type="email" maxlength="120"
+                 value="{{ (form.email if form is defined and form else enquiry.email) or '' }}">
+        </div>
+        <div class="col-md-3">
+          <label class="form-label small" for="popup_state">State</label>
+          <input class="form-control form-control-sm" id="popup_state" name="state" maxlength="50"
+                 value="{{ (form.state if form is defined and form else enquiry.state) or '' }}">
+        </div>
+        <div class="col-md-3">
+          <label class="form-label small" for="popup_district">District</label>
+          <input class="form-control form-control-sm" id="popup_district" name="district" maxlength="50"
+                 value="{{ (form.district if form is defined and form else enquiry.district) or '' }}">
+        </div>
+        <div class="col-md-6">
+          <label class="form-label small" for="popup_category">Category</label>
+          <select class="form-select form-select-sm" id="popup_category" name="category_id" required>
+            {% for category in categories %}
+            <option value="{{ category.category_id }}"
+              {% if (form.category_id if form is defined and form else enquiry.category_id)|string == category.category_id|string %}selected{% endif %}>
+              {{ category.category_name }}
+            </option>
+            {% endfor %}
+            {% if enquiry.category and enquiry.category.is_active == False %}
+            <option value="{{ enquiry.category_id }}" selected>{{ enquiry.category.category_name }} (inactive)</option>
+            {% endif %}
+          </select>
+        </div>
+        <div class="col-md-6">
+          <label class="form-label small" for="popup_subject">Subject</label>
+          <input class="form-control form-control-sm" id="popup_subject" name="subject" maxlength="150" required
+                 value="{{ form.subject if form is defined and form else enquiry.subject }}">
+        </div>
+        <div class="col-12">
+          <label class="form-label small" for="popup_description">Description</label>
+          <textarea class="form-control form-control-sm" id="popup_description" name="description" rows="2"
+                    required>{{ form.description if form is defined and form else enquiry.description }}</textarea>
+        </div>
+        {% if enquiry.attachments %}
+        <div class="col-12">
+          <div class="doc-existing">
+            <div class="popup-docs-title">
+              <i class="bi bi-paperclip me-1"></i> Attached Documents · {{ enquiry.attachments|length }}
+            </div>
+            {% for attachment in enquiry.attachments %}
+            {{ doc.existing_doc_row(attachment, current_user.is_admin or attachment.uploaded_by_user_id == current_user.user_id) }}
+            {% endfor %}
+          </div>
+        </div>
+        {% endif %}
+        <div class="col-12">
+          <div class="doc-upload">
+            <label class="form-label small mb-1" for="popup_documents">
+              <i class="bi bi-plus-lg me-1"></i> Add New Documents
+            </label>
+            <input class="form-control form-control-sm" type="file" id="popup_documents"
+                   name="documents" multiple
+                   accept=".pdf,.xls,.xlsx,.csv,.doc,.docx,.png,.jpg,.jpeg,.gif,.txt">
+            <div class="form-text mb-0">
+              Optional — attach one or more files: PDF, Excel, Word, images or CSV.
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer py-2">
+      <button type="button" class="btn btn-sm btn-outline-secondary px-3" data-popup-view="details">
+        <i class="bi bi-arrow-left"></i> Back
+      </button>
+      <button type="submit" class="btn btn-brand btn-sm px-3">
+        <i class="bi bi-save"></i> Save Changes
+      </button>
+    </div>
+  </form>
+
+  {#- ------------------------------ DETAILS VIEW --------------------------- -#}
+  {% else %}
+  <div class="modal-body">
+    {% if popup_message is defined and popup_message %}
+    <div class="alert alert-success py-2 px-3 small mb-2">
+      <i class="bi bi-check-circle-fill me-1"></i> {{ popup_message }}
+    </div>
+    {% endif %}
+
+    <div class="popup-status-strip">
+      <div class="popup-status-main">
+        <span class="small text-muted me-1">Status:</span>
+        <span class="badge status-badge {{ STATUS_BADGE_CLASSES.get(enquiry.status, 'status-new') }}">{{ enquiry.status }}</span>
+      </div>
+      <div class="small text-muted">
+        {{ enquiry.category.category_name if enquiry.category else '—' }}
+        · Assigned to {{ enquiry.assigned_to.full_name if enquiry.assigned_to else 'Unassigned' }}{% if enquiry.assigned_to and enquiry.assigned_to.email %} ({{ enquiry.assigned_to.email }}){% endif %}
+      </div>
+    </div>
+
+    <div class="popup-columns">
+      <div class="popup-details-col">
+        <dl class="row enquiry-meta popup-meta mb-0">
+          <dt class="col-sm-3">Full Name</dt><dd class="col-sm-9">{{ enquiry.full_name }}</dd>
+          <dt class="col-sm-3">Mobile Number</dt><dd class="col-sm-9">{{ enquiry.mobile_number }}</dd>
+          <dt class="col-sm-3">Email</dt><dd class="col-sm-9">{{ enquiry.email or '—' }}</dd>
+          <dt class="col-sm-3">State / District</dt>
+          <dd class="col-sm-9">{{ enquiry.state or '—' }} / {{ enquiry.district or '—' }}</dd>
+          <dt class="col-sm-3">Subject</dt><dd class="col-sm-9">{{ enquiry.subject }}</dd>
+          <dt class="col-sm-3">Description</dt><dd class="col-sm-9 pre-wrap">{{ enquiry.description }}</dd>
+          <dt class="col-sm-3">Created By</dt>
+          <dd class="col-sm-9">{{ enquiry.created_by.full_name if enquiry.created_by else 'Visitor' }}</dd>
+          <dt class="col-sm-3">Created On</dt>
+          <dd class="col-sm-9">{{ enquiry.created_at.strftime('%d %b %Y, %H:%M') }}</dd>
+          {% if current_assignment %}
+          <dt class="col-sm-3">Assigned To</dt>
+          <dd class="col-sm-9">{{ current_assignment.assigned_to.full_name if current_assignment.assigned_to else '—' }}</dd>
+          {% endif %}
+        </dl>
+      </div>
+
+      <div class="popup-flow-col">
+        <div class="popup-flow-card">
+          <div class="popup-flow-title"><i class="bi bi-signpost-2 me-1"></i> Assigned Status Workflow</div>
+          <div class="popup-flow-body">
+            {% set flow_total = enquiry.status_history|length %}
+            {% for group in enquiry.status_history|batch(3) %}
+            {% set row_start = loop.index0 * 3 %}
+            <div class="flow-row">
+              {% for entry in group if entry %}
+              {% if not loop.first %}<span class="flow-arrow"><i class="bi bi-arrow-right"></i></span>{% endif %}
+              {% set step_no = row_start + loop.index0 %}
+              <div class="flow-step{% if step_no == flow_total - 1 %} current{% endif %}"
+                   title="{{ entry.changed_at.strftime('%d %b %Y, %H:%M') }}{% if entry.changed_by %} · by {{ entry.changed_by.full_name }}{% endif %}">
+                <span class="flow-name">
+                  <span class="flow-dot {{ STATUS_BADGE_CLASSES.get(entry.new_status, 'status-new')|replace('status-', 'c-') }}"></span>{{ entry.new_status }}
+                </span>
+                <span class="flow-date">{{ entry.changed_at.strftime('%d %b %Y') }}</span>
+              </div>
+              {% endfor %}
+            </div>
+            {% else %}
+            <div class="small text-muted">No status recorded yet.</div>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    {% if enquiry.attachments %}
+    <div class="popup-docs">
+      <div class="popup-docs-title">
+        <i class="bi bi-paperclip me-1"></i> Documents · {{ enquiry.attachments|length }}
+      </div>
+      <div class="popup-docs-list">
+        {% for attachment in enquiry.attachments %}
+        <a class="doc-row"
+           href="{{ url_for('enquiry.download_attachment', attachment_id=attachment.attachment_id) }}"
+           title="Download {{ attachment.original_file_name }}">
+          <i class="bi doc-icon {{ doc.doc_icon(attachment.original_file_name) }}"></i>
+          <span class="doc-name">{{ attachment.original_file_name }}</span>
+          <span class="doc-meta">
+            {{ (attachment.file_size / 1024)|round(1) }} KB
+            · {{ attachment.uploaded_by.full_name if attachment.uploaded_by else '—' }}
+            · {{ attachment.created_at.strftime('%d %b %Y') }}
+          </span>
+          <i class="bi bi-download doc-go"></i>
+        </a>
+        {% endfor %}
+      </div>
+    </div>
+    {% endif %}
+  </div>
+  <div class="modal-footer py-2">
+    {% if with_edit %}
+    <button type="button" class="btn btn-sm btn-brand px-3" data-popup-view="edit"
+            title="Open the edit form for this enquiry">
+      <i class="bi bi-pencil-square"></i> Edit Enquiry
+    </button>
+    {% endif %}
+    {% if current_user.is_admin %}
+    <button type="button" class="btn btn-sm btn-gold px-3" data-popup-view="manage"
+            title="Assign, update the status and add a remark in one place">
+      <i class="bi bi-sliders"></i> Manage Enquiry
+    </button>
+    {% elif can_update_status %}
+    <button type="button" class="btn btn-sm btn-gold px-3" data-popup-view="status">
+      <i class="bi bi-arrow-repeat"></i> Update Status
+    </button>
+    {% endif %}
+    <button type="button" class="btn btn-sm btn-outline-secondary px-3" data-bs-dismiss="modal">Close</button>
+  </div>
+  {% endif %}
+</div>

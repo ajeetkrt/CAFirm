@@ -1,0 +1,148 @@
+{% extends 'layouts/dashboard.html' %}
+{% block title %}My Dashboard — {{ APP_NAME }}{% endblock %}
+{% block topbar_title %}My Dashboard · {{ current_user.full_name }}{% endblock %}
+
+{% block dashboard_content %}
+<div class="dash-fit">
+
+<!-- ==================== WELCOME BAND ==================== -->
+<section class="welcome-band dash-band">
+  <div class="welcome-left">
+    <h1 class="welcome-hello">{{ greeting }}, {{ current_user.full_name.split()[0] }}</h1>
+    <p class="welcome-date">
+      <i class="bi bi-calendar3"></i> {{ today_long }}
+      <span class="welcome-dot">·</span> My workspace
+    </p>
+  </div>
+  <div class="welcome-right">
+    <div class="welcome-chips">
+      <span class="welcome-chip"><i class="bi bi-activity"></i> {{ active_count }} open</span>
+      <span class="welcome-chip"><i class="bi bi-calendar-plus"></i> {{ month_count }} this month</span>
+      <span class="welcome-chip"><i class="bi bi-graph-up-arrow"></i> {{ resolution_rate }}% resolved</span>
+    </div>
+    <div class="d-flex justify-content-end gap-2 mt-2">
+      <a class="btn btn-gold btn-sm px-3" href="{{ url_for('enquiry.create') }}">
+        <i class="bi bi-plus-circle-fill"></i> New Enquiry
+      </a>
+      <a class="btn btn-outline-light btn-sm px-3" href="{{ url_for('enquiry.list_enquiries') }}">
+        <i class="bi bi-inboxes"></i> View All
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- ==================== KPI TILES (same five-tile line as admin) ======= -->
+<div class="kpi-row">
+  {% for kpi in kpis %}
+  <div class="kpi-card {% if kpi.status %}kpi-{{ STATUS_BADGE_CLASSES.get(kpi.status, 'status-new')|replace('status-','') }}{% else %}kpi-total{% endif %}"
+       title="{{ kpi.note }}">
+    <div class="kpi-head">
+      <div class="kpi-icon"><i class="bi {{ kpi.icon }}"></i></div>
+      <div class="kpi-num">{{ kpi.value }}</div>
+    </div>
+    <div class="kpi-label">{{ kpi.label }}</div>
+    <div class="kpi-bar"><span style="width: {{ kpi.percent }}%"></span></div>
+    <div class="kpi-foot">
+      {% if kpi.chips %}
+      <span class="kpi-chips">
+        {% for chip in kpi.chips %}
+        <span class="kpi-chip {{ chip.class }}"><i></i>{{ chip.label }}{% if chip.count %}&nbsp;{{ chip.count }}{% endif %}</span>
+        {% endfor %}
+      </span>
+      {% else %}
+      <span class="kpi-foot-note">{{ kpi.note }}</span>
+      {% endif %}
+      <span class="kpi-percent">{{ kpi.percent }}%</span>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+
+<!-- ==================== CHARTS ==================== -->
+<div class="row g-2 dash-row dash-row-charts">
+  <div class="col-xl-6 col-md-6">
+    <div class="card chart-card"><div class="card-body">
+      <div class="chart-head">
+        <h2 class="chart-title">My Enquiries by Status</h2>
+        <span class="chart-sub">All time</span>
+      </div>
+      <div class="chart-wrap chart-wrap-sm"><canvas id="statusChart"></canvas></div>
+      <script type="application/json" id="chartStatus">{{ charts.status|tojson }}</script>
+    </div></div>
+  </div>
+  <div class="col-xl-6 col-md-6">
+    <div class="card chart-card"><div class="card-body">
+      <div class="chart-head">
+        <h2 class="chart-title">My Monthly Enquiry Trend</h2>
+        <span class="chart-sub">Recent months</span>
+      </div>
+      <div class="chart-wrap chart-wrap-sm"><canvas id="trendChart"></canvas></div>
+      <script type="application/json" id="chartTrend">{{ charts.monthly_trend|tojson }}</script>
+    </div></div>
+  </div>
+</div>
+
+<!-- ==================== MY WORK WIDGETS ==================== -->
+<div class="row g-2 dash-row dash-row-widgets">
+  <div class="col-xl-6">
+    <div class="card table-card">
+      <div class="card-header table-head">
+        <h2 class="table-title"><i class="bi bi-inbox-fill"></i> My Recent Enquiries</h2>
+        <div class="d-flex align-items-center gap-2">
+          <span class="metric-chip"><i class="bi bi-database"></i> {{ my_total }} mine</span>
+          <div class="wpager" data-wpager>
+            <button type="button" class="wpager-btn" data-dir="-1" aria-label="Previous page"><i class="bi bi-chevron-left"></i></button>
+            <span class="wpager-ind"><b>1</b><i>/</i><span class="wpager-total">4</span></span>
+            <button type="button" class="wpager-btn" data-dir="1" aria-label="Next page"><i class="bi bi-chevron-right"></i></button>
+          </div>
+        </div>
+      </div>
+      <div class="widget-body">
+        {% for enquiry in recent %}
+        <a class="wrow" href="{{ url_for('enquiry.detail', enquiry_id=enquiry.enquiry_id) }}"
+           data-enquiry-popup="{{ enquiry.enquiry_id }}"
+           title="View enquiry {{ enquiry.enquiry_number }}">
+          <span class="wrow-code">{{ enquiry.enquiry_number }}</span>
+          <span class="wrow-name">{{ enquiry.full_name }}</span>
+          <span class="badge status-badge {{ STATUS_BADGE_CLASSES.get(enquiry.status, 'status-new') }}">{{ enquiry.status }}</span>
+          <span class="wrow-date">{{ enquiry.created_at.strftime('%d %b') }}</span>
+          <span class="wrow-go" title="View"><i class="bi bi-eye"></i></span>
+        </a>
+        {% else %}
+        <div class="wrow-empty">No enquiries yet — create your first one.</div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+
+  <div class="col-xl-6">
+    <div class="card table-card">
+      <div class="card-header table-head">
+        <h2 class="table-title"><i class="bi bi-activity"></i> My Recent Activities</h2>
+        <div class="d-flex align-items-center gap-2">
+          <span class="metric-chip"><i class="bi bi-clock-history"></i> {{ activities|length }} latest</span>
+          <div class="wpager" data-wpager>
+            <button type="button" class="wpager-btn" data-dir="-1" aria-label="Previous page"><i class="bi bi-chevron-left"></i></button>
+            <span class="wpager-ind"><b>1</b><i>/</i><span class="wpager-total">4</span></span>
+            <button type="button" class="wpager-btn" data-dir="1" aria-label="Next page"><i class="bi bi-chevron-right"></i></button>
+          </div>
+        </div>
+      </div>
+      <div class="widget-body">
+        {% for activity in activities %}
+        <div class="wrow wrow-act">
+          <span class="wrow-date">{{ activity.created_at.strftime('%d %b %H:%M') }}</span>
+          <span class="wrow-name" title="{{ activity.description }}">{{ activity.description }}</span>
+          <span class="badge activity-badge">{{ activity.action }}</span>
+          <span class="wrow-go" title="Logged activity"><i class="bi bi-clock-history"></i></span>
+        </div>
+        {% else %}
+        <div class="wrow-empty">No activities yet.</div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+</div>
+
+</div>
+{% endblock %}

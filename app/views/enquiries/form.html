@@ -1,0 +1,94 @@
+{% extends 'layouts/dashboard.html' %}
+{% block title %}New Enquiry — {{ APP_NAME }}{% endblock %}
+{% block topbar_title %}New Enquiry{% endblock %}
+{% block extra_css %}
+{{ super() }}<link rel="stylesheet" href="{{ url_for('static', filename='css/enquiry.css') }}?v={{ static_v('css/enquiry.css') }}">
+{% endblock %}
+
+{% block dashboard_content %}
+<div class="form-fit">
+  <div class="row justify-content-center">
+    <div class="col-lg-10 col-xl-9">
+      <div class="card form-card shadow-sm">
+        <div class="card-header form-card-header">
+          <h1 class="h5 mb-0"><i class="bi bi-send"></i> Create Enquiry</h1>
+          <span class="small">Recorded for {{ 'Admin' if current_user.is_admin else 'Employee' }} ·
+            Source: {{ 'ADMIN' if current_user.is_admin else 'USER' }}</span>
+        </div>
+        <div class="card-body">
+          <form method="post" action="{{ url_for('enquiry.create') }}" novalidate autocomplete="off">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+            <div class="row g-2">
+              <div class="col-md-4">
+                <label class="form-label" for="full_name">Full Name <span class="req">*</span></label>
+                <input class="form-control" id="full_name" name="full_name" maxlength="100"
+                       value="{{ form.full_name if form is defined and form else '' }}" required>
+              </div>
+              <div class="col-md-4">
+                <label class="form-label" for="mobile_number">Mobile Number <span class="req">*</span></label>
+                <input class="form-control" id="mobile_number" name="mobile_number" maxlength="16"
+                       inputmode="tel" value="{{ form.mobile_number if form is defined and form else '' }}" required>
+              </div>
+              <div class="col-md-4">
+                <label class="form-label" for="email">Email Address <span class="req">*</span></label>
+                <input class="form-control" type="email" id="email" name="email" maxlength="120"
+                       value="{{ form.email if form is defined and form else '' }}" required>
+              </div>
+
+              <div class="col-md-3">
+                <label class="form-label" for="category_id">Enquiry Category <span class="req">*</span></label>
+                <select class="form-select" id="category_id" name="category_id" required>
+                  <option value="">— Select category —</option>
+                  {% for category in categories %}
+                  <option value="{{ category.category_id }}"
+                    {% if form is defined and form and form.category_id|string == category.category_id|string %}selected{% endif %}>
+                    {{ category.category_name }}
+                  </option>
+                  {% endfor %}
+                </select>
+              </div>
+              <div class="col-md-4">
+                <label class="form-label" for="subject">Enquiry Subject <span class="req">*</span></label>
+                <input class="form-control" id="subject" name="subject" maxlength="150"
+                       value="{{ form.subject if form is defined and form else '' }}" required>
+              </div>
+              <div class="col-md-3">
+                <label class="form-label" for="state">State (optional)</label>
+                <input class="form-control" id="state" name="state" maxlength="50"
+                       value="{{ form.state if form is defined and form else '' }}">
+              </div>
+              <div class="col-md-2">
+                <label class="form-label" for="district">District (optional)</label>
+                <input class="form-control" id="district" name="district" maxlength="50"
+                       value="{{ form.district if form is defined and form else '' }}">
+              </div>
+
+              <div class="col-12">
+                <label class="form-label" for="description">Enquiry Description <span class="req">*</span></label>
+                <textarea class="form-control" id="description" name="description" rows="3" required
+                          data-charcount="descCounter">{{ form.description if form is defined and form else '' }}</textarea>
+                <div class="form-text"><span id="descCounter">0</span> / 5000 characters</div>
+              </div>
+            </div>
+
+            <div class="d-flex justify-content-between align-items-center form-actions">
+              <span class="text-muted small"><span class="req">*</span> Required fields</span>
+              <div class="d-flex gap-2">
+                <a class="btn btn-outline-secondary" href="{{ url_for('enquiry.list_enquiries') }}">Cancel</a>
+                <button type="submit" class="btn btn-gold px-4">
+                  <i class="bi bi-send"></i> Save Enquiry
+                </button>
+              </div>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/enquiry.js') }}" defer></script>
+{% endblock %}

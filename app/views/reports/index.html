@@ -1,0 +1,173 @@
+{% extends 'layouts/dashboard.html' %}
+{% block title %}Reports — {{ APP_NAME }}{% endblock %}
+{% block topbar_title %}Reports &amp; Exports{% endblock %}
+
+{% block dashboard_content %}
+<div class="card table-card">
+  <div class="card-header">
+    <h1 class="h5 mb-0"><i class="bi bi-file-earmark-bar-graph"></i> Reports</h1>
+  </div>
+
+  <div class="card-body border-bottom">
+    <form method="post" action="{{ url_for('report.index') }}" class="row g-2 align-items-end">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <div class="col-md-3">
+        <label class="form-label small">Report Type</label>
+        <select class="form-select form-select-sm" name="report_type" required>
+          {% for key, label in report_types.items() %}
+          <option value="{{ key }}" {% if filters.report_type == key %}selected{% endif %}>{{ label }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="col-md-2">
+        <label class="form-label small">From Date</label>
+        <input class="form-control form-control-sm" type="date" name="date_from"
+               value="{{ filters.date_from.strftime('%Y-%m-%d') if filters.date_from else '' }}">
+      </div>
+      <div class="col-md-2">
+        <label class="form-label small">To Date</label>
+        <input class="form-control form-control-sm" type="date" name="date_to"
+               value="{{ filters.date_to.strftime('%Y-%m-%d') if filters.date_to else '' }}">
+      </div>
+      <div class="col-md-2">
+        <label class="form-label small">Status</label>
+        <select class="form-select form-select-sm" name="status">
+          <option value="">All</option>
+          {% for status in statuses %}
+          <option value="{{ status }}" {% if filters.status == status %}selected{% endif %}>{{ status }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="col-md-2">
+        <label class="form-label small">Category</label>
+        <select class="form-select form-select-sm" name="category_id">
+          <option value="">All</option>
+          {% for category in categories %}
+          <option value="{{ category.category_id }}"
+            {% if filters.category_id and filters.category_id|string == category.category_id|string %}selected{% endif %}>
+            {{ category.category_name }}
+          </option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="col-md-2">
+        <label class="form-label small">Source</label>
+        <select class="form-select form-select-sm" name="source">
+          <option value="">All</option>
+          {% for source in sources %}
+          <option value="{{ source }}" {% if filters.source == source %}selected{% endif %}>{{ source.title() }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="col-md-2">
+        <label class="form-label small">Employee</label>
+        <select class="form-select form-select-sm" name="assigned_to_user_id">
+          <option value="">All</option>
+          {% for employee in employees %}
+          <option value="{{ employee.user_id }}"
+            {% if filters.assigned_to_user_id and filters.assigned_to_user_id|string == employee.user_id|string %}selected{% endif %}>
+            {{ employee.full_name }}
+          </option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="col-md-2">
+        <button class="btn btn-brand btn-sm w-100"><i class="bi bi-play"></i> Generate Report</button>
+      </div>
+    </form>
+  </div>
+
+  {% if report %}
+  <div class="card-body border-bottom d-flex flex-wrap justify-content-between align-items-center gap-2">
+    <div>
+      <strong>{{ report.title }}</strong>
+      <div class="small text-muted">
+        {{ report.scope }} · Generated {{ report.generated_at }} by {{ report.generated_by }}
+        · {{ report.rows|length }} record(s)
+      </div>
+    </div>
+    <div class="d-flex gap-2">
+      <form method="post" action="{{ url_for('report.export_excel') }}">
+        {% for key in ['report_type', 'status', 'source'] if key in filters %}
+          <input type="hidden" name="{{ key }}" value="{{ filters[key] or '' }}">
+        {% endfor %}
+        <input type="hidden" name="date_from" value="{{ filters.date_from.strftime('%Y-%m-%d') if filters.date_from else '' }}">
+        <input type="hidden" name="date_to" value="{{ filters.date_to.strftime('%Y-%m-%d') if filters.date_to else '' }}">
+        <input type="hidden" name="category_id" value="{{ filters.category_id or '' }}">
+        <input type="hidden" name="assigned_to_user_id" value="{{ filters.assigned_to_user_id or '' }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <button class="btn btn-sm btn-success"><i class="bi bi-file-earmark-excel"></i> Excel</button>
+      </form>
+      <form method="post" action="{{ url_for('report.export_pdf') }}">
+        {% for key in ['report_type', 'status', 'source'] if key in filters %}
+          <input type="hidden" name="{{ key }}" value="{{ filters[key] or '' }}">
+        {% endfor %}
+        <input type="hidden" name="date_from" value="{{ filters.date_from.strftime('%Y-%m-%d') if filters.date_from else '' }}">
+        <input type="hidden" name="date_to" value="{{ filters.date_to.strftime('%Y-%m-%d') if filters.date_to else '' }}">
+        <input type="hidden" name="category_id" value="{{ filters.category_id or '' }}">
+        <input type="hidden" name="assigned_to_user_id" value="{{ filters.assigned_to_user_id or '' }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <button class="btn btn-sm btn-danger"><i class="bi bi-file-earmark-pdf"></i> PDF</button>
+      </form>
+    </div>
+  </div>
+
+  <div class="table-responsive report-table">
+    <table class="table table-sm table-striped table-hover align-middle mb-0">
+      <thead><tr>{% for header in report.headers %}<th>{{ header }}</th>{% endfor %}</tr></thead>
+      <tbody>
+        {% for row in page_rows %}
+        <tr>{% for cell in row %}<td class="small">{{ cell }}</td>{% endfor %}</tr>
+        {% else %}
+        <tr><td colspan="{{ report.headers|length }}" class="text-center text-muted py-4">No records found.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  {% if pagination %}
+  <div class="list-foot">
+    <span class="list-count">
+      Showing <strong>{{ pagination.start }}–{{ pagination.end }}</strong> of <strong>{{ pagination.total }}</strong>
+      · Page {{ pagination.page }} of {{ pagination.pages }} · 10 records per page
+    </span>
+
+    {% if pagination.pages > 1 %}
+    {% set pages = pagination.pages %}
+    {% set win_start = [([pagination.page - 2, 1] | max), ([pages - 4, 1] | max)] | min %}
+    {% set win_end = [win_start + 4, pages] | min %}
+    {% set win_start = [win_end - 4, 1] | max %}
+    <nav aria-label="Report pages">
+      <ul class="pagination pagination-sm mb-0 pagination-ca">
+        <li class="page-item {% if pagination.page <= 1 %}disabled{% endif %}">
+          <a class="page-link" {% if pagination.page > 1 %}href="{{ url_for('report.index', page=pagination.page - 1, **link_params) }}"{% else %}href="#"{% endif %}>&laquo;</a>
+        </li>
+        {% if win_start > 1 %}
+        <li class="page-item"><a class="page-link" href="{{ url_for('report.index', page=1, **link_params) }}">1</a></li>
+        {% if win_start > 2 %}<li class="page-item disabled"><span class="page-link page-ellipsis">…</span></li>{% endif %}
+        {% endif %}
+        {% for p in range(win_start, win_end + 1) %}
+        <li class="page-item {{ 'active' if p == pagination.page }}">
+          <a class="page-link" href="{{ url_for('report.index', page=p, **link_params) }}">{{ p }}</a>
+        </li>
+        {% endfor %}
+        {% if win_end < pages %}
+        {% if win_end < pages - 1 %}<li class="page-item disabled"><span class="page-link page-ellipsis">…</span></li>{% endif %}
+        <li class="page-item"><a class="page-link" href="{{ url_for('report.index', page=pages, **link_params) }}">{{ pages }}</a></li>
+        {% endif %}
+        <li class="page-item {% if pagination.page >= pages %}disabled{% endif %}">
+          <a class="page-link" {% if pagination.page < pages %}href="{{ url_for('report.index', page=pagination.page + 1, **link_params) }}"{% else %}href="#"{% endif %}>&raquo;</a>
+        </li>
+      </ul>
+    </nav>
+    {% endif %}
+  </div>
+  {% endif %}
+  {% else %}
+  <div class="card-body text-center text-muted py-5">
+    <i class="bi bi-bar-chart fs-1"></i>
+    <p class="mt-2 mb-0">Select a report type and filters, then press <strong>Generate Report</strong>.</p>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

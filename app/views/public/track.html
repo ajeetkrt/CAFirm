@@ -1,0 +1,158 @@
+{% extends 'layouts/base.html' %}
+{% block title %}Track Enquiry — {{ APP_NAME }}{% endblock %}
+{% block extra_css %}<link rel="stylesheet" href="{{ url_for('static', filename='css/enquiry.css') }}?v={{ static_v('css/enquiry.css') }}">{% endblock %}
+{% block main_class %}container py-1 form-fit{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-lg-9 col-xl-8">
+    <div class="card form-card shadow-sm">
+      <div class="card-header form-card-header">
+        <h1 class="h5 mb-0"><i class="bi bi-search"></i> Track Your Enquiry</h1>
+        <span class="small">Any one identifier is enough</span>
+      </div>
+      <div class="card-body">
+
+        <!-- ==================== UNIFIED TRACK FORM ==================== -->
+        <form method="post" action="{{ url_for('public.track') }}" novalidate>
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <input type="hidden" name="action" value="status">
+          <div class="row g-2">
+            <div class="col-md-6">
+              <label class="form-label" for="enquiry_number">
+                <i class="bi bi-ticket-perforated"></i> Enquiry Reference Number
+              </label>
+              <input class="form-control" id="enquiry_number" name="enquiry_number"
+                     value="{{ prefill_number }}" placeholder="CAF-2026-000001" maxlength="30">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label" for="mobile_lookup_number">
+                <i class="bi bi-phone"></i> Registered Mobile Number
+              </label>
+              <input type="tel" class="form-control" id="mobile_lookup_number" name="mobile"
+                     value="{{ prefill_mobile }}" placeholder="10-15 digits" maxlength="20">
+            </div>
+          </div>
+          <div class="d-flex justify-content-between align-items-center form-actions">
+            <span class="text-muted small">
+              <i class="bi bi-info-circle"></i> Enter <strong>any one</strong> — both are not needed.
+            </span>
+            <button type="submit" class="btn btn-gold px-4">
+              <i class="bi bi-search"></i> Track Status
+            </button>
+          </div>
+        </form>
+
+        <!-- ==================== STATUS RESULT ==================== -->
+        {% if enquiry %}
+        <hr class="my-3">
+        <div class="track-result">
+          <div class="status-head">
+            <code class="enquiry-code">{{ enquiry.enquiry_number }}</code>
+            <span class="badge status-badge {{ STATUS_BADGE_CLASSES.get(enquiry.status, 'status-new') }} fs-6">
+              {{ enquiry.status }}
+            </span>
+          </div>
+
+          {% set stage = {'New': 1, 'Pending': 1, 'Assigned': 1, 'Reopened': 1,
+                          'In Progress': 2, 'Resolved': 3, 'Closed': 3}[enquiry.status] | default(0) %}
+          {% if stage %}
+          <div class="progress-steps">
+            <div class="progress-step {{ 'done' if stage > 1 else 'current' }}">Received</div>
+            <div class="progress-step {{ 'done' if stage > 2 else ('current' if stage == 2 else '') }}">In Progress</div>
+            <div class="progress-step {{ 'current' if stage == 3 else '' }}">Resolved</div>
+          </div>
+          {% endif %}
+
+          <div class="track-details">
+            <div class="track-detail"><div class="k">Subject</div><div class="v">{{ enquiry.subject }}</div></div>
+            <div class="track-detail"><div class="k">Category</div><div class="v">{{ enquiry.category or '—' }}</div></div>
+            <div class="track-detail"><div class="k">Submitted On</div><div class="v">{{ enquiry.created_at[:10] }}</div></div>
+            <div class="track-detail"><div class="k">Last Updated</div><div class="v">{{ enquiry.updated_at[:10] }}</div></div>
+          </div>
+
+          {% if enquiry.assigned_to %}
+          <div class="assigned-strip">
+            <div class="assigned-avatar"><i class="bi bi-person-fill"></i></div>
+            <div class="assigned-info">
+              <div class="assigned-role">Assigned Officer</div>
+              <div class="assigned-name">{{ enquiry.assigned_to.name }}</div>
+            </div>
+            <div class="assigned-contact">
+              {% if enquiry.assigned_to.email %}
+              <a href="mailto:{{ enquiry.assigned_to.email }}">
+                <i class="bi bi-envelope-fill"></i> {{ enquiry.assigned_to.email }}
+              </a>
+              {% else %}
+              <span class="text-muted small">Contact via the office</span>
+              {% endif %}
+            </div>
+          </div>
+          {% else %}
+          <div class="assigned-strip assigned-strip-empty">
+            <div class="assigned-avatar assigned-avatar-empty"><i class="bi bi-hourglass-split"></i></div>
+            <div class="assigned-info">
+              <div class="assigned-role">Assignment</div>
+              <div class="assigned-name">Not yet assigned</div>
+            </div>
+            <div class="assigned-contact">
+              <span class="text-muted small">Your enquiry is in the queue and will be handled shortly.</span>
+            </div>
+          </div>
+          {% endif %}
+
+          <h3 class="h6 mt-2 mb-2"><i class="bi bi-activity"></i> Status Journey</h3>
+          {% if history %}
+          <ul class="timeline">
+            {% for entry in history %}
+            <li class="timeline-item">
+              <span class="timeline-badge {{ STATUS_BADGE_CLASSES.get(entry.status, 'status-new') }}"></span>
+              <div class="small fw-semibold">{{ entry.status }}</div>
+              <div class="text-muted small">{{ entry.changed_at[:16].replace('T', ', ') }}</div>
+            </li>
+            {% endfor %}
+          </ul>
+          {% else %}
+          <p class="text-muted small mb-0">No status updates yet. Your enquiry is in the queue.</p>
+          {% endif %}
+        </div>
+        {% endif %}
+
+        <!-- ==================== MOBILE LOOKUP RESULTS ==================== -->
+        {% if mobile_results is not none %}
+        <hr class="my-3">
+        <h2 class="h6 mb-2"><i class="bi bi-phone"></i> Enquiries for this mobile number
+          <span class="badge bg-secondary">{{ mobile_total }}</span></h2>
+        {% if mobile_results %}
+        <div class="mobile-list">
+          {% for item in mobile_results %}
+          <div class="mobile-item">
+            <div>
+              <code class="enquiry-code enquiry-code-sm">{{ item.enquiry_number }}</code>
+              <div class="small fw-semibold mt-1">{{ item.subject }}</div>
+              <div class="small text-muted">{{ item.category_name or '—' }} · {{ item.created_at[:10] }}</div>
+            </div>
+            <div class="d-flex align-items-center gap-2">
+              <span class="badge status-badge {{ STATUS_BADGE_CLASSES.get(item.status, 'status-new') }}">
+                {{ item.status }}
+              </span>
+              <a class="btn btn-sm btn-outline-brand" href="{{ url_for('public.track', number=item.enquiry_number) }}">
+                View Status <i class="bi bi-arrow-right"></i>
+              </a>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+        {% else %}
+        <p class="text-muted small mb-0">No enquiries were found for this mobile number.</p>
+        {% endif %}
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/enquiry.js') }}" defer></script>
+{% endblock %}

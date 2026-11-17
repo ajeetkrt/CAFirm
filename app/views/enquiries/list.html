@@ -1,0 +1,171 @@
+{% extends 'layouts/dashboard.html' %}
+{% block title %}Enquiries — {{ APP_NAME }}{% endblock %}
+{% block topbar_title %}Enquiry Management{% endblock %}
+
+{# Query-string helper: only non-empty filter values travel in links #}
+{% set qs = {} %}
+{% for key, value in filters.items() %}{% if value %}{% set _ = qs.update({key: value}) %}{% endif %}{% endfor %}
+
+{% block dashboard_content %}
+<div class="fit-list">
+
+<!-- ==================== ENQUIRY HUB BAND ==================== -->
+<section class="welcome-band dash-band">
+  <div class="welcome-left">
+    <h1 class="welcome-hello"><i class="bi bi-inboxes me-1"></i> Enquiry Management</h1>
+    <p class="welcome-date">
+      Capture <span class="welcome-dot">·</span> Assign <span class="welcome-dot">·</span>
+      Track <span class="welcome-dot">·</span> Resolve — every enquiry in one place
+    </p>
+  </div>
+  <div class="welcome-right">
+    <div class="welcome-chips">
+      <span class="welcome-chip"><i class="bi bi-hourglass-split"></i> {{ open_count }} open</span>
+      <span class="welcome-chip"><i class="bi bi-check2-circle"></i> {{ resolved_count }} resolved</span>
+      <span class="welcome-chip"><i class="bi bi-database"></i> {{ total_all }} total</span>
+    </div>
+    <div class="d-flex justify-content-end gap-2 mt-2">
+      <a class="btn btn-gold btn-sm px-3" href="{{ url_for('enquiry.create') }}">
+        <i class="bi bi-plus-circle-fill"></i> New Enquiry
+      </a>
+      <a class="btn btn-outline-light btn-sm px-3" href="{{ url_for('report.index') }}">
+        <i class="bi bi-file-earmark-bar-graph"></i> Reports
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- ==================== LIST + FILTERS ==================== -->
+<div class="card table-card">
+
+  <!-- ---------- Filter row (selects auto-apply, Enter applies search) ------ -->
+  <div class="filter-panel">
+    <form method="get" action="{{ url_for('enquiry.list_enquiries') }}"
+          class="row g-2 filter-bar filter-auto" autocomplete="off">
+      <div class="col-12 col-lg-3">
+        <input aria-label="Search enquiries" class="form-control form-control-sm" type="text"
+               name="q" value="{{ filters.q }}" placeholder="Search number, name, mobile, subject"
+               autocomplete="off">
+      </div>
+      <div class="col-6 col-lg-2">
+        <select aria-label="Filter by status" class="form-select form-select-sm" name="status">
+          <option value="">Status: All</option>
+          {% for status in statuses %}
+          <option value="{{ status }}" {% if filters.status == status %}selected{% endif %}>{{ status }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="col-6 col-lg-2">
+        <select aria-label="Filter by category" class="form-select form-select-sm" name="category_id">
+          <option value="">Category: All</option>
+          {% for category in categories %}
+          <option value="{{ category.category_id }}" {% if filters.category_id|string == category.category_id|string %}selected{% endif %}>
+            {{ category.category_name }}
+          </option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="col-6 col-lg-2">
+        <select aria-label="Filter by source" class="form-select form-select-sm" name="source">
+          <option value="">Source: All</option>
+          {% for source in ['ADMIN', 'USER', 'VISITOR'] %}
+          <option value="{{ source }}" {% if filters.source == source %}selected{% endif %}>{{ source.title() }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="col-6 col-lg-3">
+        <select aria-label="Filter by assigned employee" class="form-select form-select-sm" name="assigned_to_user_id">
+          <option value="">Assigned to: All</option>
+          {% for employee in employees %}
+          <option value="{{ employee.user_id }}" {% if filters.assigned_to_user_id|string == employee.user_id|string %}selected{% endif %}>
+            {{ employee.full_name }}
+          </option>
+          {% endfor %}
+        </select>
+      </div>
+    </form>
+  </div>
+
+  <!-- ---------- Result table ---------- -->
+  <div class="table-responsive">
+    <table class="table table-hover align-middle enquiry-table mb-0">
+      <thead>
+        <tr>
+          <th>Enquiry No.</th>
+          <th>Name</th>
+          <th class="d-none d-md-table-cell">Category</th>
+          <th>Subject</th>
+          <th class="d-none d-lg-table-cell">Source</th>
+          <th>Assigned To</th>
+          <th>Status</th>
+          <th class="d-none d-lg-table-cell">Created</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for enquiry in enquiries %}
+        <tr data-enquiry-popup="{{ enquiry.enquiry_id }}"
+            title="View enquiry {{ enquiry.enquiry_number }}">
+          <td><a href="{{ url_for('enquiry.detail', enquiry_id=enquiry.enquiry_id) }}"
+                 class="fw-semibold enquiry-link" data-enquiry-popup-edit="1"
+                 title="Open {{ enquiry.enquiry_number }} · edit available">{{ enquiry.enquiry_number }}</a></td>
+          <td>{{ enquiry.full_name }}</td>
+          <td class="d-none d-md-table-cell">{{ enquiry.category.category_name if enquiry.category else '—' }}</td>
+          <td class="text-truncate-cell" title="{{ enquiry.subject }}">{{ enquiry.subject }}</td>
+          <td class="d-none d-lg-table-cell"><span class="source-chip source-{{ enquiry.source|lower }}">{{ enquiry.source|title }}</span></td>
+          <td>{{ enquiry.assigned_to.full_name if enquiry.assigned_to else '—' }}</td>
+          <td><span class="badge status-badge {{ STATUS_BADGE_CLASSES.get(enquiry.status, 'status-new') }}">{{ enquiry.status }}</span></td>
+          <td class="d-none d-lg-table-cell">{{ enquiry.created_at.strftime('%d %b %Y') }}</td>
+        </tr>
+        {% else %}
+        <tr><td colspan="8" class="text-center text-muted py-4">
+          <i class="bi bi-inbox d-block mb-1" style="font-size:1.4rem"></i>
+          No enquiries match the current view. Adjust the filters or raise a new enquiry.
+        </td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <!-- ---------- Result footer + 5 x 5 pagination ---------- -->
+  {% set pages = pagination.pages %}
+  {% set start_row = (pagination.page - 1) * per_page + 1 %}
+  {% set end_row = start_row + enquiries|length - 1 %}
+  <div class="list-foot">
+    <span class="list-count">
+      Showing <strong>{{ start_row }}–{{ end_row }}</strong> of <strong>{{ pagination.total }}</strong>
+      · Page {{ pagination.page }} of {{ pages }} · Newest first
+    </span>
+
+    {% if pages > 1 %}
+    {% set win_start = [([pagination.page - 2, 1] | max), ([pages - 4, 1] | max)] | min %}
+    {% set win_end = [win_start + 4, pages] | min %}
+    {% set win_start = [win_end - 4, 1] | max %}
+    <nav aria-label="Enquiry pages">
+      <ul class="pagination pagination-sm mb-0 pagination-ca">
+        <li class="page-item {% if not pagination.has_prev %}disabled{% endif %}">
+          <a class="page-link" {% if pagination.has_prev %}href="{{ url_for('enquiry.list_enquiries', page=pagination.prev_num, **qs) }}"{% else %}href="#"{% endif %}>&laquo;</a>
+        </li>
+        {% if win_start > 1 %}
+        <li class="page-item"><a class="page-link" href="{{ url_for('enquiry.list_enquiries', page=1, **qs) }}">1</a></li>
+        {% if win_start > 2 %}<li class="page-item disabled"><span class="page-link page-ellipsis">…</span></li>{% endif %}
+        {% endif %}
+        {% for p in range(win_start, win_end + 1) %}
+        <li class="page-item {{ 'active' if p == pagination.page }}">
+          <a class="page-link" href="{{ url_for('enquiry.list_enquiries', page=p, **qs) }}">{{ p }}</a>
+        </li>
+        {% endfor %}
+        {% if win_end < pages %}
+        {% if win_end < pages - 1 %}<li class="page-item disabled"><span class="page-link page-ellipsis">…</span></li>{% endif %}
+        <li class="page-item"><a class="page-link" href="{{ url_for('enquiry.list_enquiries', page=pages, **qs) }}">{{ pages }}</a></li>
+        {% endif %}
+        <li class="page-item {% if not pagination.has_next %}disabled{% endif %}">
+          <a class="page-link" {% if pagination.has_next %}href="{{ url_for('enquiry.list_enquiries', page=pagination.next_num, **qs) }}"{% else %}href="#"{% endif %}>&raquo;</a>
+        </li>
+      </ul>
+    </nav>
+    {% endif %}
+  </div>
+</div>
+
+</div>
+{% endblock %}

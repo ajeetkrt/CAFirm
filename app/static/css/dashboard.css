@@ -1,0 +1,1009 @@
+/* ==========================================================================
+   CAFirm — dashboard stylesheet (dashboard.css)
+   Sidebar + topbar shell, KPI cards and chart panels.
+   ========================================================================== */
+
+.app-shell { background: var(--ca-green-050); }
+
+/* The layout fills the area above the footer exactly — the rail and topbar
+   are fixed, and .page-body below is the single scroll area. Same constant
+   the rail always used, so no percentage-height chain is involved. */
+.app-layout {
+  height: calc(100vh - 2.5rem);
+  height: calc(100dvh - 2.5rem);
+  min-height: 0;
+  width: 100%;
+}
+
+/* --- Sidebar — deep-green rail, always anchored ----------------------------
+   Fixed-width flex column: brand and user card stay put, only the nav
+   scrolls internally (slim scrollbar), and Logout is pinned to the bottom.
+   Long names ellipsize instead of pushing the layout around. */
+.app-sidebar {
+  width: 264px;
+  min-width: 264px;
+  flex: 0 0 264px;
+  background:
+    radial-gradient(1100px 480px at -25% -12%, rgba(255, 255, 255, .07), transparent 55%),
+    linear-gradient(180deg, var(--ca-green-900) 0%, var(--ca-green-800) 100%);
+  color: #fff;
+  padding: 1rem .7rem .85rem;
+  border-top: 3px solid var(--ca-amber);
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, .22) transparent;
+  box-shadow: 6px 0 22px rgba(27, 94, 32, .22);
+}
+
+.sidebar-brand {
+  display: flex;
+  align-items: center;
+  gap: .6rem;
+  padding: .3rem .45rem .95rem;
+  border-bottom: 1px solid rgba(255, 255, 255, .14);
+  flex: 0 0 auto;
+}
+.sidebar-brand .brand-mark {
+  background: #fff;
+  color: var(--ca-green-800);
+  box-shadow: 0 0 0 2px rgba(242, 178, 51, .55), 0 2px 8px rgba(0, 0, 0, .3);
+}
+.sidebar-brand .brand-name { color: #fff; }
+.sidebar-brand .brand-sub { color: rgba(255, 255, 255, .6); font-size: .68rem; letter-spacing: .6px; text-transform: uppercase; }
+
+.sidebar-user {
+  display: flex;
+  align-items: center;
+  gap: .6rem;
+  margin-top: .8rem;
+  padding: .55rem .6rem;
+  background: rgba(255, 255, 255, .07);
+  border: 1px solid rgba(255, 255, 255, .13);
+  border-radius: 12px;
+  flex: 0 0 auto;
+}
+.sidebar-user > div { min-width: 0; }
+.sidebar-user .fw-semibold {
+  font-size: .84rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.sidebar-user .text-white-50 {
+  font-size: .66rem;
+  text-transform: uppercase;
+  letter-spacing: .7px;
+  white-space: nowrap;
+}
+.sidebar-avatar {
+  width: 40px; height: 40px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--ca-amber), #f2b233);
+  color: var(--ca-green-900);
+  display: grid; place-items: center;
+  font-weight: 800;
+  flex: 0 0 auto;
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, .28);
+}
+
+/* Nav takes whatever space is left (base size 0 — it can never push the
+   brand, user card or Logout around) and scrolls internally when long. */
+.sidebar-nav {
+  padding: .35rem .3rem .6rem .15rem;
+  flex: 1 1 0;
+  min-height: 0;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, .22) transparent;
+}
+.sidebar-nav::-webkit-scrollbar { width: 6px; }
+.sidebar-nav::-webkit-scrollbar-track { background: transparent; }
+.sidebar-nav::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, .2); border-radius: 999px; }
+.sidebar-nav::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, .36); }
+
+.sidebar-section {
+  font-size: .62rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: rgba(255, 255, 255, .42);
+  padding: .85rem .7rem .35rem;
+  flex: 0 0 auto;
+}
+.sidebar-link {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: .65rem;
+  padding: .5rem .7rem;
+  border-radius: 9px;
+  color: rgba(255, 255, 255, .82);
+  text-decoration: none;
+  font-size: .87rem;
+  font-weight: 500;
+  white-space: nowrap;
+  transition: background .15s ease, color .15s ease;
+}
+.sidebar-link::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 3px;
+  height: 0;
+  border-radius: 999px;
+  background: var(--ca-amber);
+  transition: height .18s ease;
+}
+.sidebar-link:hover { background: rgba(255, 255, 255, .09); color: #fff; }
+.sidebar-link:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(242, 178, 51, .55);
+}
+.sidebar-link.active {
+  background: rgba(255, 255, 255, .15);
+  color: #fff;
+  font-weight: 600;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .09);
+}
+.sidebar-link.active::before { height: 62%; }
+.sidebar-link.active .bi { color: var(--ca-amber); }
+.sidebar-link .bi { width: 1.25rem; text-align: center; font-size: .95rem; }
+
+.sidebar-logout {
+  padding-top: .8rem;
+  border-top: 1px solid rgba(255, 255, 255, .14);
+  flex: 0 0 auto;
+}
+.sidebar-logout .btn {
+  border: 1px solid rgba(255, 255, 255, .28);
+  color: rgba(255, 255, 255, .88);
+  border-radius: 9px;
+  font-size: .82rem;
+  font-weight: 600;
+  padding: .42rem .75rem;
+  transition: background .15s ease, border-color .15s ease, color .15s ease;
+}
+.sidebar-logout .btn:hover,
+.sidebar-logout .btn:focus {
+  background: rgba(198, 40, 40, .28);
+  border-color: rgba(255, 255, 255, .42);
+  color: #fff;
+}
+
+/* --- Topbar — deep-green command bar with gold accent ---------------------- */
+.app-content {
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+.app-topbar {
+  background: linear-gradient(120deg, var(--ca-green-900) 0%, var(--ca-green-800) 70%, #2c6e33 100%);
+  color: #fff;
+  border-bottom: 3px solid var(--ca-amber);
+  padding: .5rem 1.1rem;
+  position: relative;
+  z-index: 100;
+  box-shadow: 0 4px 14px rgba(27, 94, 32, .28);
+}
+.topbar-title {
+  font-size: .92rem;
+  font-weight: 700;
+  letter-spacing: .3px;
+  color: #fff;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.topbar-title::before {
+  content: '';
+  display: inline-block;
+  width: 3px;
+  height: 15px;
+  border-radius: 999px;
+  background: var(--ca-amber);
+  vertical-align: -.2em;
+  margin-right: .55rem;
+}
+/* First topbar group may shrink (long page titles ellipsize);
+   the user area never squishes. */
+.app-topbar > div:first-child { min-width: 0; }
+.app-topbar > div:last-child { flex: 0 0 auto; }
+.topbar-toggle {
+  border: 1px solid rgba(255, 255, 255, .3);
+  color: #fff;
+  border-radius: 8px;
+  padding: .25rem .55rem;
+  background: rgba(255, 255, 255, .08);
+}
+.topbar-toggle:hover { background: rgba(255, 255, 255, .18); color: #fff; }
+
+.topbar-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: .4rem;
+  background: rgba(255, 255, 255, .12);
+  border: 1px solid rgba(255, 255, 255, .22);
+  color: #eaf4ec;
+  border-radius: 999px;
+  padding: .26rem .8rem;
+  font-size: .72rem;
+  font-weight: 600;
+}
+.topbar-chip .bi { color: var(--ca-amber); }
+
+.topbar-user {
+  display: flex;
+  align-items: center;
+  gap: .55rem;
+  background: rgba(255, 255, 255, .1);
+  border: 1px solid rgba(255, 255, 255, .24);
+  border-radius: 999px;
+  padding: .2rem .65rem .2rem .25rem;
+  color: #fff;
+  transition: background .15s ease;
+}
+.topbar-user:hover, .topbar-user:focus {
+  background: rgba(255, 255, 255, .2);
+  color: #fff;
+}
+.topbar-avatar {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  font-weight: 800;
+  font-size: .85rem;
+  background: var(--ca-amber);
+  color: var(--ca-green-900);
+  flex: 0 0 auto;
+}
+.topbar-user-meta { flex-direction: column; align-items: flex-start; line-height: 1.15; }
+.topbar-user-name { font-size: .76rem; font-weight: 700; }
+.topbar-user-role { font-size: .62rem; color: #cfe6d4; text-transform: uppercase; letter-spacing: .5px; }
+.topbar-caret { font-size: .7rem; opacity: .8; }
+
+/* Mobile sidebar — same dark-green language as the desktop rail */
+.mobile-sidebar { padding: .5rem .75rem .75rem; background: var(--ca-green-050); border: none; }
+.mobile-sidebar .card-body {
+  padding: .55rem;
+  border-radius: 12px;
+  background: linear-gradient(180deg, var(--ca-green-900), var(--ca-green-800));
+  box-shadow: 0 6px 18px rgba(27, 94, 32, .25);
+}
+.mobile-sidebar a {
+  display: flex;
+  align-items: center;
+  gap: .55rem;
+  padding: .55rem .75rem;
+  border-radius: 8px;
+  color: rgba(255, 255, 255, .85);
+  text-decoration: none;
+  font-size: .875rem;
+}
+.mobile-sidebar a:hover,
+.mobile-sidebar a.active { background: rgba(255, 255, 255, .13); color: #fff; }
+.mobile-sidebar .btn { border-radius: 8px; font-weight: 600; }
+/* Page body: the single scroll area of the staff shell — rail and topbar
+   never move, content scrolls here with a reserved scrollbar lane. */
+.page-body {
+  padding: .75rem;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  scrollbar-gutter: stable;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(27, 94, 32, .45) transparent;
+}
+.page-body::-webkit-scrollbar { width: 10px; }
+.page-body::-webkit-scrollbar-track { background: var(--ca-green-050); }
+.page-body::-webkit-scrollbar-thumb {
+  background: rgba(27, 94, 32, .35);
+  border-radius: 999px;
+  border: 2px solid var(--ca-green-050);
+}
+.page-body::-webkit-scrollbar-thumb:hover { background: rgba(27, 94, 32, .55); }
+
+/* ==========================================================================
+   Viewport-fit workspaces — the page itself never scrolls down.
+   Band + KPI row keep their natural height; charts use a comfortable
+   viewport-scaled height (never balloon on big monitors) and the widget
+   rows fill the remaining space evenly, scrolling internally if needed.
+   ========================================================================== */
+.dash-fit, .fit-list {
+  display: flex;
+  flex-direction: column;
+  gap: .55rem;
+  height: calc(100vh - 7.75rem);  /* topbar + page padding + footer */
+  min-height: 560px;              /* readable floor on short windows */
+}
+.dash-fit > .welcome-band, .fit-list > .welcome-band { margin-bottom: 0; }
+
+.dash-row { margin: 0; }
+.dash-row-charts { flex: 0 0 auto; }          /* natural height, fixed charts */
+.dash-row-widgets { flex: 1 1 0; min-height: 170px; }
+.dash-row-widgets > [class*="col-"] { display: flex; flex-direction: column; }
+
+.dash-row .card {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  height: 100%;
+  margin-bottom: 0;
+}
+.dash-row .card-body { flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; }
+
+/* Charts: comfortable on any screen — small on short windows, never giant */
+.dash-row .chart-wrap { height: clamp(150px, 21vh, 205px); }
+
+/* Widget rows fill the card evenly (up to a comfortable cap), scroll inside */
+.dash-row .widget-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: auto;
+  display: flex;
+  flex-direction: column;
+}
+.dash-row .widget-body .wrow {
+  flex: 1 0 auto;
+  min-height: 38px;
+  max-height: 62px;
+}
+.dash-row .table-responsive { flex: 1 1 auto; min-height: 0; overflow: auto; }
+
+/* The list workspace: band + filter + table + footer share one screen */
+.fit-list > .card.table-card {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  margin-bottom: 0;
+}
+.fit-list .table-responsive { flex: 1 1 auto; min-height: 0; overflow: auto; }
+.fit-list .filter-panel { flex: 0 0 auto; }
+.fit-list .list-foot { flex: 0 0 auto; }
+
+/* Small screens: stack and scroll naturally again */
+@media (max-width: 991.98px) {
+  .dash-fit, .fit-list { height: auto; min-height: 0; }
+  .dash-row .card, .fit-list > .card.table-card { height: auto; }
+  .dash-row .widget-body, .dash-row .table-responsive { max-height: 300px; }
+  .dash-row .widget-body .wrow { flex: 0 0 auto; }
+}
+
+/* --- Welcome band ----------------------------------------------------------- */
+.welcome-band {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: .75rem;
+  background: linear-gradient(120deg, var(--ca-green-900) 0%, var(--ca-green-800) 65%, #2c6e33 100%);
+  color: #fff;
+  border-radius: 12px;
+  border-bottom: 3px solid var(--ca-amber);
+  box-shadow: 0 6px 18px rgba(27, 94, 32, .22);
+  padding: .5rem clamp(.85rem, 1.6vw, 1.25rem);
+  margin-bottom: .6rem;
+}
+.welcome-hello {
+  font-size: clamp(.98rem, 1.9vh, 1.2rem);
+  font-weight: 700;
+  line-height: 1.2;
+  margin: 0;
+}
+.welcome-date {
+  margin: .1rem 0 0;
+  font-size: clamp(.66rem, 1.15vh, .76rem);
+  color: #cfe6d4;
+}
+.welcome-date .bi { color: var(--ca-amber); }
+.welcome-dot { margin: 0 .35rem; opacity: .6; }
+.welcome-right { text-align: right; }
+.welcome-chips { display: flex; flex-wrap: wrap; gap: .35rem; justify-content: flex-end; }
+.welcome-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: .3rem;
+  background: rgba(255, 255, 255, .14);
+  border: 1px solid rgba(255, 255, 255, .22);
+  border-radius: 999px;
+  padding: .18rem .6rem;
+  font-size: clamp(.62rem, 1.1vh, .72rem);
+  font-weight: 600;
+}
+.welcome-chip .bi { color: var(--ca-amber); }
+
+/* --- KPI cards — compact tiles with icon, share bar, hover lift ------------- */
+.kpi-card {
+  background: #fff;
+  border: 1px solid var(--ca-border);
+  border-radius: 10px;
+  padding: .45rem .6rem;
+  box-shadow: var(--ca-shadow);
+  height: 100%;
+  transition: transform .15s ease, box-shadow .15s ease;
+}
+.kpi-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 18px rgba(27, 94, 32, .15);
+}
+.kpi-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: .45rem;
+}
+.kpi-icon {
+  width: clamp(26px, 4vh, 34px);
+  height: clamp(26px, 4vh, 34px);
+  border-radius: 8px;
+  display: grid;
+  place-items: center;
+  font-size: clamp(.8rem, 1.6vh, 1rem);
+  flex: 0 0 auto;
+}
+.kpi-num, .kpi-value {
+  font-size: clamp(1.15rem, 2.6vh, 1.55rem);
+  font-weight: 800;
+  line-height: 1;
+  color: var(--ca-green-900);
+  letter-spacing: -.4px;
+}
+.kpi-label {
+  font-size: .62rem;
+  color: var(--ca-text-muted);
+  text-transform: uppercase;
+  letter-spacing: .45px;
+  margin-top: .22rem;
+  font-weight: 600;
+}
+.kpi-bar {
+  height: 4px;
+  border-radius: 999px;
+  background: var(--ca-border);
+  margin-top: .22rem;
+  overflow: hidden;
+}
+.kpi-bar span {
+  display: block;
+  height: 100%;
+  border-radius: 999px;
+  transition: width .6s ease;
+}
+.kpi-foot {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: .5rem;
+  margin-top: .12rem;
+  font-size: .56rem;
+  text-transform: uppercase;
+  letter-spacing: .35px;
+  color: var(--ca-text-muted);
+}
+.kpi-percent { font-weight: 700; color: var(--ca-green-800); white-space: nowrap; }
+/* Status breakdown notes ellipsize so every tile stays one line tall */
+.kpi-foot-note {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+/* Colour-coded status mini-legend (Open / Completed tile breakdowns):
+   a status dot + label + count per chip — clean legend, no raw text dump. */
+.kpi-chips {
+  display: flex;
+  align-items: center;
+  gap: .45rem;
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  font-size: .62rem;
+  font-weight: 600;
+  color: var(--ca-text-muted);
+}
+.kpi-chip { display: inline-flex; align-items: center; gap: .28rem; }
+.kpi-chip i { width: 6px; height: 6px; border-radius: 50%; flex: 0 0 auto; }
+.kpi-chip.c-new i        { background: #0288d1; }
+.kpi-chip.c-pending i    { background: #f9a825; }
+.kpi-chip.c-assigned i   { background: #8e24aa; }
+.kpi-chip.c-inprogress i { background: #7cb342; }
+.kpi-chip.c-reopened i   { background: #ef6c00; }
+.kpi-chip.c-resolved i   { background: #2e7d32; }
+.kpi-chip.c-closed i     { background: #546e7a; }
+
+/* Status tinting: icon tile + bar */
+.kpi-total .kpi-icon, .kpi-neutral .kpi-icon { color: var(--ca-green-800); background: rgba(46, 125, 50, .12); }
+.kpi-total .kpi-bar span, .kpi-neutral .kpi-bar span { background: var(--ca-green-700); }
+.kpi-new .kpi-icon      { color: #0288d1; background: rgba(2, 136, 209, .12); }
+.kpi-new .kpi-bar span  { background: #0288d1; }
+.kpi-pending .kpi-icon      { color: #f9a825; background: rgba(249, 168, 37, .14); }
+.kpi-pending .kpi-bar span  { background: #f9a825; }
+.kpi-assigned .kpi-icon      { color: #8e24aa; background: rgba(142, 36, 170, .12); }
+.kpi-assigned .kpi-bar span  { background: #8e24aa; }
+.kpi-inprogress .kpi-icon      { color: #7cb342; background: rgba(124, 179, 66, .14); }
+.kpi-inprogress .kpi-bar span  { background: #7cb342; }
+.kpi-resolved .kpi-icon      { color: #2e7d32; background: rgba(46, 125, 50, .12); }
+.kpi-resolved .kpi-bar span  { background: #2e7d32; }
+.kpi-closed .kpi-icon      { color: #546e7a; background: rgba(84, 110, 122, .12); }
+.kpi-closed .kpi-bar span  { background: #546e7a; }
+.kpi-rejected .kpi-icon      { color: #c62828; background: rgba(198, 40, 40, .12); }
+.kpi-rejected .kpi-bar span  { background: #c62828; }
+.kpi-reopened .kpi-icon      { color: #ef6c00; background: rgba(239, 108, 0, .12); }
+.kpi-reopened .kpi-bar span  { background: #ef6c00; }
+
+/* --- Admin KPI row — exactly five tiles on ONE line from small tablet up.
+   minmax(0,1fr) forces equal columns so no tile can ever wrap to a new line;
+   inner content compacts instead (see the media tier below). ---------------- */
+.kpi-row {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: .5rem;
+}
+.kpi-row .kpi-card { min-width: 0; }
+.kpi-row .kpi-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+@media (min-width: 576px) {
+  .kpi-row { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+}
+/* Compact tier for narrow five-across tiles (window scaled / sidebar shown) */
+@media (min-width: 576px) and (max-width: 1259.98px) {
+  .kpi-row .kpi-icon { width: 28px; height: 28px; font-size: .85rem; }
+  .kpi-row .kpi-num { font-size: clamp(1rem, 2.2vh, 1.3rem); }
+  .kpi-row .kpi-label { font-size: .58rem; letter-spacing: .3px; }
+}
+
+/* Legacy accent (plain cards without icon/bar, e.g. employee dashboard) */
+.kpi-total { border-top: 4px solid var(--ca-green-800); }
+.kpi-new     { border-top: 4px solid #0288d1; }
+.kpi-pending { border-top: 4px solid #f9a825; }
+.kpi-assigned{ border-top: 4px solid #8e24aa; }
+.kpi-inprogress{ border-top: 4px solid #7cb342; }
+.kpi-resolved{ border-top: 4px solid #2e7d32; }
+.kpi-closed  { border-top: 4px solid #546e7a; }
+.kpi-rejected{ border-top: 4px solid #c62828; }
+.kpi-reopened{ border-top: 4px solid #ef6c00; }
+
+/* --- Chart cards ------------------------------------------------------------ */
+.chart-title {
+  font-size: .72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .5px;
+  color: var(--ca-green-900);
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: .4rem;
+}
+.chart-title::before {
+  content: '';
+  width: 3px;
+  height: 12px;
+  border-radius: 999px;
+  background: var(--ca-amber);
+  flex: 0 0 auto;
+}
+.chart-sub { font-size: .62rem; color: var(--ca-text-muted); text-transform: uppercase; letter-spacing: .4px; }
+.chart-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: .5rem;
+  margin-bottom: .35rem;
+}
+.chart-card { border-radius: 10px; }
+.chart-card .card-body { padding: .5rem .7rem; }
+.chart-wrap { position: relative; height: 148px; }
+.chart-wrap-sm { height: 148px; position: relative; }
+
+/* Intentional empty state inside a chart card (instead of a blank canvas) */
+.chart-empty {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: .3rem;
+  color: var(--ca-text-muted);
+  font-size: .66rem;
+  font-weight: 700;
+  letter-spacing: .4px;
+  text-transform: uppercase;
+  text-align: center;
+  pointer-events: none;
+}
+.chart-empty .bi {
+  font-size: 1.3rem;
+  color: rgba(27, 94, 32, .3);
+}
+
+/* Widget pager — 4 rows per page (up to 4 pages), browsing without reloads.
+   Same compact pill language as the metric/age chips on this dashboard. */
+.wpager {
+  display: inline-flex;
+  align-items: center;
+  gap: .18rem;
+  background: #fff;
+  border: 1px solid var(--ca-border);
+  border-radius: 999px;
+  padding: .12rem .3rem;
+}
+.wpager-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border: none;
+  background: transparent;
+  color: var(--ca-green-800);
+  border-radius: 50%;
+  font-size: .7rem;
+  cursor: pointer;
+  padding: 0;
+  transition: background .12s ease;
+}
+.wpager-btn:hover:not(:disabled) { background: var(--ca-green-050); }
+.wpager-btn:disabled { opacity: .3; cursor: default; }
+.wpager-ind {
+  font-size: .64rem;
+  font-weight: 700;
+  color: var(--ca-text);
+  min-width: 2.2rem;
+  text-align: center;
+  white-space: nowrap;
+}
+.wpager-ind b { color: var(--ca-green-800); }
+.wpager-ind i, .wpager-ind .wpager-total {
+  color: var(--ca-text-muted);
+  font-style: normal;
+}
+
+/* --- Table cards -------------------------------------------------------------- */
+.table-card { border-radius: 10px; }
+.table-card .table-head {
+  background: #fff;
+  border-bottom: 1px solid var(--ca-border);
+  padding: .38rem .7rem;
+}
+.table-title {
+  font-size: .72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .5px;
+  color: var(--ca-green-900);
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: .4rem;
+}
+.table-title .bi { color: var(--ca-green-700); font-size: .8rem; }
+
+.enquiry-link {
+  font-weight: 700;
+  color: var(--ca-green-800);
+  text-decoration: none;
+}
+.enquiry-link:hover { color: var(--ca-green-600); text-decoration: underline; }
+
+/* --- Workload widgets — measured visual rows (replaces tables) -------------- */
+.widget-body { padding: .18rem .4rem .3rem; }
+
+.metric-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: .35rem;
+  background: var(--ca-green-050);
+  border: 1px solid var(--ca-border);
+  color: var(--ca-green-900);
+  border-radius: 999px;
+  padding: .13rem .55rem;
+  font-size: .62rem;
+  font-weight: 700;
+  letter-spacing: .3px;
+  white-space: nowrap;
+}
+.metric-chip .bi { color: var(--ca-green-700); }
+.metric-amber { background: rgba(249, 168, 37, .12); border-color: rgba(249, 168, 37, .4); }
+.metric-amber .bi { color: #e65100; }
+
+.wrow {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto auto auto;
+  align-items: center;
+  gap: .55rem;
+  padding: .27rem .5rem;
+  border-radius: 8px;
+  text-decoration: none;
+  transition: background .12s ease;
+}
+/* Trailing "view" affordance — ghost eye that fills green on hover */
+.wrow-go {
+  width: 22px;
+  height: 22px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  color: var(--ca-text-muted);
+  font-size: .74rem;
+  transition: background .12s ease, color .12s ease, transform .12s ease;
+}
+.wrow:hover { background: var(--ca-green-050); }
+.wrow:hover .wrow-go {
+  background: var(--ca-green-800);
+  color: #fff;
+  transform: scale(1.1);
+}
+.wrow + .wrow { border-top: 1px solid var(--ca-border); }
+.wrow-code {
+  font-family: ui-monospace, Consolas, monospace;
+  font-size: .7rem;
+  font-weight: 700;
+  color: var(--ca-green-800);
+  background: var(--ca-green-050);
+  border: 1px solid var(--ca-border);
+  border-radius: 6px;
+  padding: .12em .45em;
+  white-space: nowrap;
+}
+.wrow-name {
+  font-size: .74rem;
+  font-weight: 600;
+  color: var(--ca-text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.wrow-date { font-size: .66rem; color: var(--ca-text-muted); white-space: nowrap; }
+.wrow .badge { font-size: .6rem; padding: .28em .6em; }
+.wrow-empty { padding: .55rem .5rem; text-align: center; color: var(--ca-text-muted); font-size: .74rem; }
+/* Activity rows: time · description · action badge · marker (4 columns) */
+.wrow.wrow-act { grid-template-columns: auto minmax(0, 1fr) auto auto; }
+
+/* Popup-enabled enquiry rows (dashboard widgets + list table): the whole row
+   is the click target — no per-row icon column needed. */
+[data-enquiry-popup] { cursor: pointer; }
+tr[data-enquiry-popup] > td .enquiry-link { pointer-events: auto; }
+
+/* Waiting-age chip on the pending queue */
+.age-chip {
+  font-size: .6rem;
+  font-weight: 800;
+  letter-spacing: .3px;
+  border-radius: 999px;
+  padding: .16em .55em;
+  white-space: nowrap;
+}
+.age-cool { color: #2e7d32; background: rgba(46, 125, 50, .12); }
+.age-warm { color: #b26a00; background: rgba(249, 168, 37, .16); }
+.age-hot  { color: #c62828; background: rgba(198, 40, 40, .12); }
+
+/* --- Activity badges on dashboard tables ----------------------------------- */
+.table td .activity-badge { margin-bottom: .2rem; }
+
+/* ==========================================================================
+   Manage Users — compact admin page, fits the viewport (no page scroll)
+   ========================================================================== */
+
+/* Table area scrolls internally if there are many accounts; the page itself
+   keeps a fixed height. */
+.table-scroll {
+  max-height: calc(100vh - 300px);
+  min-height: 160px;
+  overflow: auto;
+}
+.table-scroll thead th {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  font-size: .66rem;
+}
+
+.users-table td { padding: .38rem .55rem; }
+.table-user-name { font-size: .82rem; line-height: 1.2; }
+.table-username { font-size: .66rem; color: var(--ca-text-muted); }
+.users-table .badge { font-size: .66rem; }
+
+.user-avatar {
+  width: 30px;
+  height: 30px;
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--ca-green-700), var(--ca-green-900));
+  color: #fff;
+  font-weight: 700;
+  font-size: .78rem;
+  box-shadow: 0 2px 6px rgba(27, 94, 32, .22);
+}
+.user-avatar.inactive {
+  background: linear-gradient(135deg, #9e9e9e, #616161);
+  box-shadow: none;
+}
+/* Amber avatar tile for enquiry categories */
+.cat-avatar {
+  background: linear-gradient(135deg, #f9a825, #b26a00);
+  box-shadow: 0 2px 6px rgba(178, 106, 0, .22);
+}
+
+/* Create-user modal — same brand look as the enquiry form header */
+.user-modal-header {
+  background: linear-gradient(135deg, var(--ca-green-900) 0%, var(--ca-green-800) 100%);
+  border-bottom: 3px solid var(--ca-amber);
+}
+.user-modal-header .modal-title {
+  color: #fff;
+  font-weight: 700;
+  font-size: .95rem;
+}
+.modal-content { border-radius: 12px; }
+.modal-body { padding: .9rem 1rem .6rem; }
+.modal-footer { border-top: 1px solid var(--ca-border); }
+
+/* ==========================================================================
+   Manage Enquiry panel — one admin panel: assignment + status + one remark
+   ========================================================================== */
+/* Current-state strip: the two facts you are about to change */
+.manage-strip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .4rem .75rem;
+  padding: .5rem .6rem;
+  background: linear-gradient(135deg, rgba(27, 94, 32, .07), rgba(249, 168, 37, .09));
+  border: 1px solid var(--ca-border);
+  border-radius: 10px;
+}
+.manage-cell { display: flex; align-items: center; gap: .45rem; min-width: 0; }
+.manage-k {
+  color: var(--ca-text-muted);
+  font-size: .68rem;
+  font-weight: 700;
+  letter-spacing: .4px;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+.manage-v { font-size: .78rem; }
+.manage-strip-sm { padding: .4rem .5rem; }
+
+.manage-label {
+  display: block;
+  color: var(--ca-green-900);
+  font-size: .68rem;
+  font-weight: 700;
+  letter-spacing: .4px;
+  text-transform: uppercase;
+  margin-bottom: .25rem;
+}
+.manage-label .bi { color: var(--ca-amber); }
+.manage-hint {
+  color: var(--ca-text-muted);
+  font-size: .66rem;
+  margin-top: .25rem;
+}
+.manage-card .form-select,
+.manage-card .form-control { margin-bottom: 0; }
+
+/* ==========================================================================
+   Enquiry popup (dashboard) — details, status and edit without navigating
+   ========================================================================== */
+/* Forms wrap the body+footer inside scrollable dialogs: keep the flex
+   column so the modal body (not the page) does the scrolling. */
+.modal-dialog-scrollable .modal-content > form {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  flex: 1 1 auto;
+}
+
+.popup-status-strip {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: .5rem;
+  background: var(--ca-green-050);
+  border: 1px solid rgba(46, 125, 50, .18);
+  border-left: 3px solid var(--ca-green-700);
+  border-radius: 8px;
+  padding: .45rem .7rem;
+  margin-bottom: .8rem;
+}
+.popup-status-main { display: flex; align-items: center; }
+
+/* Details left · Assigned Status Workflow right */
+.popup-columns { display: flex; gap: 1rem; align-items: flex-start; }
+.popup-details-col { flex: 1 1 auto; min-width: 0; }
+.popup-flow-col { flex: 0 0 clamp(260px, 37%, 360px); min-width: 0; }
+.popup-flow-card {
+  border: 1px solid rgba(46, 125, 50, .18);
+  border-radius: 10px;
+  background: var(--ca-green-050);
+  padding: .6rem .7rem;
+}
+.popup-flow-title {
+  font-size: .64rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .5px;
+  color: var(--ca-green-800);
+  margin-bottom: .55rem;
+}
+/* Workflow legend: exactly three statuses per line, arrows inside the line,
+   steps sharing the row evenly for a professional grid feel. */
+.popup-flow-body {
+  display: flex;
+  flex-direction: column;
+  gap: .3rem;
+  max-height: 300px;
+  overflow: auto;
+}
+.flow-row {
+  display: flex;
+  align-items: center;
+  gap: .15rem;
+}
+.flow-row .flow-step { flex: 1 1 0; min-width: 0; }
+.flow-row .flow-arrow { flex: 0 0 auto; }
+.flow-step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: .1rem;
+  padding: .32rem .4rem;
+  border-radius: 8px;
+  text-align: center;
+}
+.flow-step.current { background: rgba(46, 125, 50, .12); box-shadow: inset 0 0 0 1px rgba(46, 125, 50, .25); }
+.flow-name {
+  display: inline-flex;
+  align-items: center;
+  gap: .3rem;
+  font-size: .68rem;
+  font-weight: 700;
+  color: var(--ca-text);
+  white-space: nowrap;
+}
+.flow-dot { width: 8px; height: 8px; border-radius: 50%; flex: 0 0 auto; }
+.flow-dot.c-new        { background: #0288d1; }
+.flow-dot.c-pending    { background: #f9a825; }
+.flow-dot.c-assigned   { background: #8e24aa; }
+.flow-dot.c-inprogress { background: #7cb342; }
+.flow-dot.c-resolved   { background: #2e7d32; }
+.flow-dot.c-closed     { background: #546e7a; }
+.flow-dot.c-rejected   { background: #c62828; }
+.flow-dot.c-reopened   { background: #ef6c00; }
+.flow-date { font-size: .58rem; color: var(--ca-text-muted); white-space: nowrap; }
+.flow-arrow { color: var(--ca-green-800); font-size: .78rem; opacity: .65; flex: 0 0 auto; }
+
+/* Narrow popup: flow stacks under the details */
+@media (max-width: 767.98px) {
+  .popup-columns { flex-direction: column; }
+  .popup-flow-col { flex: 1 1 auto; width: 100%; }
+}
+
+.popup-meta dt {
+  font-size: .66rem;
+  text-transform: uppercase;
+  letter-spacing: .4px;
+  color: var(--ca-text-muted);
+  padding-top: .4rem;
+}
+.popup-meta dd { font-size: .84rem; margin-bottom: .3rem; }
+.popup-meta .pre-wrap { font-size: .82rem; }

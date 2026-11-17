@@ -1,0 +1,33 @@
+{#- Shared attachment helpers for the enquiry templates. -#}
+{#- File-type icon for an attachment name (Bootstrap icons + semantic tint). -#}
+{% macro doc_icon(name) -%}
+{%- set ext = name.rsplit('.', 1)[-1]|lower if '.' in name else '' -%}
+{%- if ext == 'pdf' -%}bi-file-earmark-pdf text-danger
+{%- elif ext in ('xls', 'xlsx', 'csv') -%}bi-file-earmark-excel text-success
+{%- elif ext in ('doc', 'docx') -%}bi-file-earmark-word text-primary
+{%- elif ext in ('png', 'jpg', 'jpeg', 'gif') -%}bi-file-earmark-image text-info
+{%- else -%}bi-file-earmark-text text-secondary
+{%- endif -%}
+{%- endmacro %}
+
+{#- One row of the existing-documents list inside an edit form: type icon,
+    name (click to download), size + date, and — when the user may delete it —
+    a "Remove" checkbox applied on Save. -#}
+{% macro existing_doc_row(doc, can_remove) -%}
+<div class="doc-row">
+  <i class="bi doc-icon {{ doc_icon(doc.original_file_name) }}"></i>
+  <a class="doc-name" href="{{ url_for('enquiry.download_attachment', attachment_id=doc.attachment_id) }}"
+     title="Download {{ doc.original_file_name }}">{{ doc.original_file_name }}</a>
+  <span class="doc-meta">{{ (doc.file_size / 1024)|round(1) }} KB · {{ doc.created_at.strftime('%d %b') }}</span>
+  {% if can_remove %}
+  <label class="doc-remove" title="Mark for removal — applied when you save">
+    <input type="checkbox" name="remove_documents" value="{{ doc.attachment_id }}">
+    <span><i class="bi bi-trash3"></i> Remove</span>
+  </label>
+  {% else %}
+  <span class="doc-locked" title="Only Admin or the uploader can remove this file">
+    <i class="bi bi-shield-lock"></i>
+  </span>
+  {% endif %}
+</div>
+{%- endmacro %}

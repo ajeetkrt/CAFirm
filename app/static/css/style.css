@@ -1,0 +1,485 @@
+/* ==========================================================================
+   CAFirm — base stylesheet (style.css)
+   ========================================================================== */
+:root {
+  --ca-green-900: #14321c;
+  --ca-green-800: #1b5e20;
+  --ca-green-700: #2e7d32;
+  --ca-green-600: #388e3c;
+  --ca-green-100: #e8f5e9;
+  --ca-green-050: #f4faf4;
+  --ca-amber: #f9a825;
+  --ca-danger: #c62828;
+  --ca-surface: #ffffff;
+  --ca-border: #dfe7df;
+  --ca-text: #24312a;
+  --ca-text-muted: #6b7a70;
+  --ca-radius: 10px;
+  --ca-shadow: 0 1px 3px rgba(20, 50, 28, 0.08), 0 4px 14px rgba(20, 50, 28, 0.06);
+}
+
+html { scroll-behavior: smooth; }
+
+body {
+  color: var(--ca-text);
+  background-color: var(--ca-green-050);
+  font-family: "Segoe UI", system-ui, -apple-system, "Helvetica Neue", Arial, sans-serif;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+main { flex: 1 0 auto; }
+
+/* --- Fixed app frame (public + staff): header, sidebar & footer stay put,
+       only the content area scrolls -------------------------------------- */
+body.app-frame,
+body.app-shell {
+  height: 100vh;
+  height: 100dvh;
+  overflow: hidden;
+}
+
+body.app-frame > main,
+body.app-shell > main {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  /* Reserve the scrollbar lane even when a page doesn't scroll — moving
+     between pages no longer squeezes/shifts the shell and sidebar. */
+  scrollbar-gutter: stable;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(27, 94, 32, 0.45) transparent;
+}
+body.app-frame > main::-webkit-scrollbar,
+body.app-shell > main::-webkit-scrollbar { width: 10px; }
+body.app-frame > main::-webkit-scrollbar-track,
+body.app-shell > main::-webkit-scrollbar-track { background: var(--ca-green-050); }
+body.app-frame > main::-webkit-scrollbar-thumb,
+body.app-shell > main::-webkit-scrollbar-thumb {
+  background: rgba(27, 94, 32, 0.35);
+  border-radius: 999px;
+  border: 2px solid var(--ca-green-050);
+}
+body.app-frame > main::-webkit-scrollbar-thumb:hover,
+body.app-shell > main::-webkit-scrollbar-thumb:hover { background: rgba(27, 94, 32, 0.55); }
+
+/* Staff shell: the layout itself never scrolls — .page-body (inside the
+   sidebar + topbar frame) is the single scroll area, so the rail and topbar
+   are truly fixed and no height has to be guessed. */
+body.app-shell > main {
+  overflow: hidden;
+}
+
+a { color: var(--ca-green-700); }
+a:hover { color: var(--ca-green-900); }
+
+/* --- Brand ---------------------------------------------------------------- */
+.brand-mark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 9px;
+  background: linear-gradient(135deg, var(--ca-green-700), var(--ca-green-900));
+  color: #fff;
+  font-weight: 700;
+  font-size: 0.95rem;
+  letter-spacing: 0.5px;
+  box-shadow: var(--ca-shadow);
+}
+.brand-mark-lg { width: 52px; height: 52px; font-size: 1.25rem; border-radius: 13px; }
+.brand-name { font-weight: 700; color: var(--ca-green-900); line-height: 1.1; }
+.brand-sub { font-size: 0.7rem; font-weight: 600; color: var(--ca-green-800); letter-spacing: 0.4px; }
+
+/* --- Navbar (public) — fixed deep-green bar ------------------------------- */
+.app-navbar {
+  flex-shrink: 0;
+  background: linear-gradient(135deg, var(--ca-green-900) 0%, var(--ca-green-800) 100%);
+  border-bottom: 3px solid var(--ca-amber);
+  box-shadow: 0 2px 12px rgba(20, 50, 28, 0.30);
+}
+.app-navbar .brand-mark {
+  background: #fff;
+  color: var(--ca-green-800);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+}
+.app-navbar .brand-name { color: #fff; }
+.app-navbar .brand-sub { color: #cfe6d4; }
+.app-navbar .nav-link { color: #e8f5e9; font-weight: 500; }
+.app-navbar .nav-link:hover,
+.app-navbar .nav-link:focus { color: var(--ca-amber); }
+.app-navbar .navbar-toggler { border-color: rgba(255, 255, 255, 0.35); }
+.app-navbar .navbar-toggler-icon { filter: invert(1) brightness(1.8); }
+.app-navbar .btn-brand {
+  background: #fff;
+  color: var(--ca-green-800);
+}
+.app-navbar .btn-brand:hover,
+.app-navbar .btn-brand:focus {
+  background: var(--ca-green-100);
+  color: var(--ca-green-900);
+  filter: none;
+}
+
+/* --- Buttons -------------------------------------------------------------- */
+.btn-brand {
+  background: linear-gradient(135deg, var(--ca-green-600), var(--ca-green-800));
+  border: none;
+  color: #fff;
+  font-weight: 600;
+}
+.btn-brand:hover, .btn-brand:focus { color: #fff; filter: brightness(1.08); }
+.btn-outline-brand {
+  border: 1px solid var(--ca-green-700);
+  color: var(--ca-green-700);
+  font-weight: 600;
+}
+.btn-outline-brand:hover { background: var(--ca-green-700); color: #fff; }
+.btn-gold {
+  background: var(--ca-amber);
+  border: none;
+  color: var(--ca-green-900);
+  font-weight: 700;
+  box-shadow: 0 4px 12px rgba(249, 168, 37, 0.35);
+}
+.btn-gold:hover,
+.btn-gold:focus {
+  background: #ffbe4d;
+  color: var(--ca-green-900);
+}
+
+/* --- Staff Login CTA — gold-ringed white pill, lifts and turns gold -------- */
+.btn-staff-login {
+  display: inline-flex;
+  align-items: center;
+  gap: .45rem;
+  background: linear-gradient(135deg, #ffffff 0%, #eef7ee 100%);
+  color: var(--ca-green-900);
+  border: 1.5px solid var(--ca-amber);
+  border-radius: 999px;
+  font-weight: 700;
+  letter-spacing: .2px;
+  box-shadow: 0 0 0 3px rgba(242, 178, 51, .22), 0 4px 12px rgba(0, 0, 0, .28);
+  transition: transform .15s ease, box-shadow .15s ease, background .15s ease,
+              color .15s ease, border-color .15s ease;
+}
+.btn-staff-login .bi {
+  display: inline-grid;
+  place-items: center;
+  width: 1.3rem;
+  height: 1.3rem;
+  border-radius: 50%;
+  background: var(--ca-amber);
+  color: var(--ca-green-900);
+  font-size: .7rem;
+  flex: 0 0 auto;
+  transition: background .15s ease, color .15s ease;
+}
+.btn-staff-login:hover,
+.btn-staff-login:focus {
+  background: var(--ca-amber);
+  border-color: var(--ca-amber);
+  color: var(--ca-green-900);
+  transform: translateY(-1px);
+  box-shadow: 0 0 0 3px rgba(242, 178, 51, .4), 0 8px 20px rgba(249, 168, 37, .45);
+}
+.btn-staff-login:hover .bi,
+.btn-staff-login:focus .bi {
+  background: var(--ca-green-900);
+  color: var(--ca-amber);
+}
+.btn-staff-login:active {
+  transform: translateY(0);
+  box-shadow: 0 0 0 3px rgba(242, 178, 51, .3), 0 3px 10px rgba(249, 168, 37, .35);
+}
+
+/* --- Cards ---------------------------------------------------------------- */
+.card { border: 1px solid var(--ca-border); border-radius: var(--ca-radius); }
+.table-card, .form-card, .chart-card, .action-card, .info-card, .feature-card {
+  box-shadow: var(--ca-shadow);
+}
+.form-card-header {
+  background: var(--ca-green-100);
+  border-bottom: 1px solid var(--ca-border);
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: .5rem;
+  color: var(--ca-green-900);
+}
+.feature-card .card-body { text-align: center; }
+.feature-icon {
+  width: 48px; height: 48px;
+  margin: 0 auto .75rem;
+  display: flex; align-items: center; justify-content: center;
+  border-radius: 12px;
+  background: var(--ca-green-100);
+  color: var(--ca-green-800);
+  font-size: 1.4rem;
+}
+.info-card { border-top: 4px solid var(--ca-green-700); }
+
+/* --- Public hero ---------------------------------------------------------- */
+.public-hero { padding: 2.5rem 0 1rem; }
+
+/* --- Status badges -------------------------------------------------------- */
+.status-badge { font-weight: 600; letter-spacing: .2px; }
+.status-new       { background: #b3e5fc; color: #01579b; }
+.status-pending   { background: #fff3cd; color: #7a5c00; }
+.status-assigned  { background: #e1bee7; color: #4a148c; }
+.status-inprogress{ background: #dcedc8; color: #33691e; }
+.status-resolved  { background: #c8e6c9; color: #1b5e20; }
+.status-closed    { background: #cfd8dc; color: #263238; }
+.status-rejected  { background: #ffcdd2; color: #b71c1c; }
+.status-reopened  { background: #ffe0b2; color: #a15c00; }
+
+.role-badge    { background: var(--ca-green-800); color: #fff; }
+.count-badge   { background: var(--ca-green-100); color: var(--ca-green-900); }
+.activity-badge{ background: #eceff1; color: #37474f; font-size: .65rem; }
+.remark-badge  { background: #e0f2f1; color: #00695c; }
+.current-badge { background: var(--ca-green-700); color: #fff; }
+
+.source-chip {
+  display: inline-block;
+  font-size: .68rem;
+  font-weight: 700;
+  padding: .25em .6em;
+  border-radius: 999px;
+  letter-spacing: .4px;
+}
+.source-admin   { background: #ede7f6; color: #4527a0; }
+.source-user    { background: #e3f2fd; color: #0d47a1; }
+.source-visitor { background: #fff8e1; color: #8d6e00; }
+
+/* --- Tables --------------------------------------------------------------- */
+.table thead th {
+  background: var(--ca-green-050);
+  color: var(--ca-green-900);
+  font-size: .78rem;
+  text-transform: uppercase;
+  letter-spacing: .4px;
+  border-bottom: 1px solid var(--ca-border);
+}
+.enquiry-link { font-weight: 600; text-decoration: none; }
+.enquiry-link:hover { text-decoration: underline; }
+.text-truncate-cell { max-width: 220px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.enquiry-meta dt { font-weight: 600; color: var(--ca-text-muted); font-size: .85rem; }
+.enquiry-meta dd { margin-bottom: .5rem; }
+.pre-wrap { white-space: pre-wrap; }
+
+/* --- Forms ---------------------------------------------------------------- */
+.req { color: var(--ca-danger); }
+.form-label { font-weight: 600; font-size: .85rem; }
+.form-text { font-size: .75rem; }
+.input-group-text { background: var(--ca-green-050); border-color: var(--ca-border); }
+.form-control:focus, .form-select:focus {
+  border-color: var(--ca-green-600);
+  box-shadow: 0 0 0 .2rem rgba(46, 125, 50, .15);
+}
+
+/* --- Filter bar ----------------------------------------------------------- */
+.filter-bar { font-size: .85rem; }
+
+/* --- Enquiry list — filter panel, chips and result footer ------------------ */
+.filter-panel {
+  padding: .55rem .75rem;
+  border-bottom: 1px solid var(--ca-border);
+  background: linear-gradient(180deg, #fbfdfb, #fff);
+}
+
+.list-foot {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: .5rem;
+  padding: .45rem .75rem;
+  border-top: 1px solid var(--ca-border);
+  background: #fbfdfb;
+}
+.list-count { font-size: .68rem; color: var(--ca-text-muted); }
+.list-count strong { color: var(--ca-green-900); }
+
+/* Numbered pagination — brand-tinted, compact */
+.pagination-ca { gap: .18rem; }
+.pagination-ca .page-link {
+  border-color: var(--ca-border);
+  color: var(--ca-green-800);
+  font-size: .7rem;
+  font-weight: 700;
+  min-width: 1.7rem;
+  text-align: center;
+  padding: .2rem .45rem;
+  border-radius: 7px !important;
+}
+.pagination-ca .page-link:hover { background: var(--ca-green-050); }
+.pagination-ca .page-item.active .page-link {
+  background: var(--ca-green-800);
+  border-color: var(--ca-green-800);
+  color: #fff;
+}
+.pagination-ca .page-item.disabled .page-link { color: #b8c7bb; }
+.page-ellipsis { border: none !important; background: transparent !important; }
+
+/* Sticky table header for long lists */
+.enquiry-table thead th { position: sticky; top: 0; z-index: 2; font-size: .66rem; }
+
+/* --- Footer --------------------------------------------------------------- */
+.app-footer {
+  flex-shrink: 0;
+  border-top: 3px solid var(--ca-amber);
+  background: linear-gradient(135deg, var(--ca-green-900) 0%, var(--ca-green-800) 100%);
+  color: #cfe6d4;
+  font-size: .8rem;
+}
+
+.footer-system-name { color: var(--ca-amber); font-weight: 600; }
+
+/* --- Flash area ----------------------------------------------------------- */
+.flash-area { margin-bottom: 1rem; }
+.flash-area .alert { border-radius: var(--ca-radius); }
+
+/* --- Misc ----------------------------------------------------------------- */
+.success-icon { font-size: 3.2rem; color: var(--ca-green-700); }
+
+/* Forms wrapping modal-body/footer inside scrollable dialogs: keep the flex
+   column so the modal body scrolls instead of the form overflowing. */
+.modal-dialog-scrollable .modal-content > form {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  flex: 1 1 auto;
+}
+
+/* --- Documents: upload zone (edit forms) + list (details popup) ------------ */
+.doc-upload {
+  border: 1.5px dashed rgba(46, 125, 50, .35);
+  border-radius: 10px;
+  background: rgba(46, 125, 50, .04);
+  padding: .55rem .65rem .45rem;
+  transition: border-color .12s ease, background .12s ease;
+}
+.doc-upload:hover { border-color: var(--ca-green-700); background: rgba(46, 125, 50, .07); }
+.doc-upload .form-text { font-size: .66rem; color: var(--ca-text-muted); }
+
+.popup-docs { margin-top: .85rem; border-top: 1px dashed var(--ca-border); padding-top: .55rem; }
+.popup-docs-title {
+  font-size: .64rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .5px;
+  color: var(--ca-green-800);
+  margin-bottom: .35rem;
+}
+.doc-row {
+  display: flex;
+  align-items: center;
+  gap: .55rem;
+  padding: .3rem .45rem;
+  border-radius: 8px;
+  text-decoration: none;
+  transition: background .12s ease;
+}
+.doc-row:hover { background: var(--ca-green-050); }
+.doc-row .doc-icon { font-size: .95rem; flex: 0 0 auto; }
+.doc-row .doc-name {
+  font-size: .74rem;
+  font-weight: 600;
+  color: var(--ca-text);
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.doc-row .doc-meta {
+  font-size: .62rem;
+  color: var(--ca-text-muted);
+  white-space: nowrap;
+  margin-left: auto;
+}
+.doc-row .doc-go {
+  font-size: .72rem;
+  color: var(--ca-text-muted);
+  flex: 0 0 auto;
+  transition: color .12s ease, transform .12s ease;
+}
+.doc-row:hover .doc-go { color: var(--ca-green-800); transform: translateY(1px); }
+
+/* Existing documents listed inside an edit form, each with a Remove pill
+   (applied on save) or a shield for files the user may not delete. */
+.doc-existing {
+  border: 1px solid var(--ca-border);
+  border-radius: 10px;
+  background: rgba(46, 125, 50, .03);
+  padding: .45rem .55rem .4rem;
+}
+.doc-existing .doc-row { padding: .22rem .3rem; }
+.doc-row .doc-name {
+  text-decoration: none;
+}
+.doc-row .doc-name:hover { text-decoration: underline; }
+.doc-remove {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: .28rem;
+  font-size: .62rem;
+  font-weight: 700;
+  letter-spacing: .2px;
+  color: #c62828;
+  background: rgba(198, 40, 40, .06);
+  border: 1px solid rgba(198, 40, 40, .32);
+  border-radius: 999px;
+  padding: .16rem .55rem;
+  cursor: pointer;
+  white-space: nowrap;
+  flex: 0 0 auto;
+  user-select: none;
+  transition: background .12s ease, color .12s ease, border-color .12s ease,
+              box-shadow .12s ease;
+}
+.doc-remove:hover { background: rgba(198, 40, 40, .13); border-color: rgba(198, 40, 40, .55); }
+.doc-remove:focus-within {
+  box-shadow: 0 0 0 3px rgba(198, 40, 40, .18);
+  outline: none;
+}
+.doc-remove input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+/* Checked = pending removal: solid red pill with a tick, unmistakable. */
+.doc-remove:has(input:checked) {
+  background: #c62828;
+  border-color: #c62828;
+  color: #fff;
+}
+.doc-remove:has(input:checked) .bi-trash3::before { content: "\F26E"; } /* bi-check */
+.doc-locked {
+  display: inline-flex;
+  align-items: center;
+  gap: .25rem;
+  font-size: .62rem;
+  font-weight: 600;
+  color: var(--ca-text-muted);
+  opacity: .7;
+  flex: 0 0 auto;
+  white-space: nowrap;
+}
+
+/* --- Tracking page tabs ------------------------------------------------------ */
+.track-tabs .nav-link {
+  color: var(--ca-text-muted);
+  border-radius: 8px 8px 0 0;
+  font-size: .92rem;
+}
+.track-tabs .nav-link i { margin-right: .35rem; }
+.track-tabs .nav-link.active {
+  color: var(--ca-green-800);
+  font-weight: 600;
+  border-color: var(--ca-border) var(--ca-border) transparent;
+}
